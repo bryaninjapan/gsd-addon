@@ -37,6 +37,20 @@ else
     echo -e "${YELLOW}⚠ dispatch directory not found (optional)${NC}"
 fi
 
+# ==================== 安裝 dispatch 腳本與工具 ====================
+
+echo -e "${BLUE}📦 Installing dispatch scripts...${NC}"
+
+if [ -d "scripts" ]; then
+    mkdir -p "$GSD_ADDON_HOME/scripts"
+    cp -r scripts/* "$GSD_ADDON_HOME/scripts/" 2>/dev/null || true
+    # 確保腳本可執行
+    chmod +x "$GSD_ADDON_HOME/scripts/"*.sh 2>/dev/null || true
+    echo -e "${GREEN}✓ dispatch scripts installed${NC}"
+else
+    echo -e "${YELLOW}⚠ scripts directory not found (optional)${NC}"
+fi
+
 # ==================== 安裝 gsd-test 框架 ====================
 
 echo -e "${BLUE}📦 Installing gsd-test framework...${NC}"
@@ -155,15 +169,25 @@ echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo "  1. Add to PATH: export PATH=\"\$PATH:$BIN_DIR\""
 echo "  2. Run tests: gsd-test --workflow booking-e2e.workflow.yml"
+echo "  3. Try dispatch: cd my-project && $GSD_ADDON_HOME/scripts/gsd-dispatch.sh 1 execute"
 echo ""
 echo -e "${BLUE}Available commands:${NC}"
 echo "  gsd-test --workflow <name>           # Run test workflow"
 echo "  gsd-test --workflow <name> --env <env>  # Specify environment"
-echo "  gsd-dispatch <phase> <env>           # Run GSD phase dispatch"
 echo "  gsd-addon-config show                # Show addon configuration"
 echo ""
-echo -e "${YELLOW}ℹ️  Note:${NC}"
-echo "  - GSD Addon test framework works alongside gsd-framework"
-echo "  - Use 'gsd-addon-config' to manage addon-specific config"
+echo -e "${BLUE}Dispatch scripts:${NC}"
+echo "  $GSD_ADDON_HOME/scripts/gsd-dispatch.sh      # Phase dispatch (research/plan/execute)"
+echo "  $GSD_ADDON_HOME/scripts/gsd-permission-audit.sh  # Cross-project permission check"
+echo ""
+echo -e "${YELLOW}ℹ️  Documentation:${NC}"
+echo "  - Dispatch guide: $GSD_ADDON_HOME/dispatch/DISPATCH-COMPLETE-GUIDE.md"
+echo "  - ScheduleWakeup & scheduling: $GSD_ADDON_HOME/SCHEDULE-WAKEUP-GUIDE.md"
+echo "  - Integration guide: $GSD_ADDON_HOME/INTEGRATION-GUIDE.md"
+echo ""
+echo -e "${YELLOW}ℹ️  Notes:${NC}"
+echo "  - GSD Addon works alongside gsd-framework (no conflicts)"
+echo "  - Use 'gsd-addon-config' for addon-specific config"
 echo "  - Use 'gsd-config' (from gsd-framework) for main GSD config"
+echo "  - Dispatch supports: research/plan/execute modes + cross-project + dynamic scheduling"
 echo ""
