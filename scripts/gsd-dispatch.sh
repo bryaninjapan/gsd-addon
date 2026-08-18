@@ -349,9 +349,19 @@ elif [[ "$MODE" == "revise" ]]; then
   else
     echo "（未找到 Phase ${PHASE} 的 PLAN.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
   fi
+elif [[ "$MODE" == "research" ]]; then
+  echo "── 士兵產出的 RESEARCH.md(軍師讀結論)────────────────────"
+  RESEARCH_FILES="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" \
+    -name "*-RESEARCH.md" 2>/dev/null | sort)"
+  if [[ -n "$RESEARCH_FILES" ]]; then
+    echo "$RESEARCH_FILES" | sed "s#^#找到: #; s#${PROJECT_DIR}/##"
+  else
+    echo "（未找到 Phase ${PHASE} 的 RESEARCH.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
+  fi
 else
+  # execute mode
   echo "── 士兵產出的 SUMMARY.md(軍師讀結論)────────────────────"
-  SUMMARY="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" -name 'SUMMARY.md' 2>/dev/null | head -1)"
+  SUMMARY="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" -name '*-SUMMARY.md' 2>/dev/null | head -1)"
   if [[ -n "$SUMMARY" ]]; then
     echo "找到: ${SUMMARY#$PROJECT_DIR/}"
   else
