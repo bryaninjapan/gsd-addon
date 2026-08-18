@@ -244,6 +244,8 @@ if [[ -n "$SERVER_URL" ]]; then
 fi
 
 # Timeout: 3600s(1 小時)避免伺服器無回應導致腳本永不返回，逾時回傳 exit code 124
+# Capture the dispatch exit code without letting set -e abort the script
+DISPATCH_RC=0
 (
   cd "$TARGET_DIR"
   run_with_timeout 3600 opencode run \
@@ -251,7 +253,14 @@ fi
     ${VARIANT:+--variant "$VARIANT"} \
     ${SERVER_URL:+--attach "$SERVER_URL"} \
     "$FULL_PROMPT"
-) 2>&1 | tee "$LOG_FILE"
+) 2>&1 | tee "$LOG_FILE" || DISPATCH_RC=$?
+
+if [[ $DISPATCH_RC -ne 0 ]]; then
+  [[ $DISPATCH_RC -eq 124 ]] \
+    && echo "✗ TIMEOUT: opencode did not finish within 3600s (exit 124)" \
+    || echo "✗ opencode exited with code $DISPATCH_RC"
+fi
+# Continue to liveness checks regardless
 
 echo ""
 echo "════════════════════════════════════════════════════════"
