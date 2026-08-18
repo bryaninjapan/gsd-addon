@@ -1,8 +1,13 @@
 # Milestone 1.2：GSD-Dispatch 韌性與重試機制 — 文檔索引
 
 **創建日期**: 2026-08-19  
-**狀態**: 🔄 規劃中  
+**狀態**: 🔄 進行中（Phase 2 完成，4/5 個 phases 待執行）  
 **所有者**: Bryan (claude)  
+
+**編號對照**: 本目錄下的 `phase-1.2a/b/c` 是最初規劃時的命名，實際執行改用 GSD 標準目錄結構
+`.planning/phases/NN-slug/`（ROADMAP 正式編號 Phase 2-5）。Phase 1.2A → 正式 Phase 2（已完成）；
+執行 Phase 2 時發現 source/安裝副本分岔問題，插入新的正式 Phase 3；原 Phase 1.2B → 正式 Phase 4；
+原 Phase 1.2C → 正式 Phase 5。
 
 ---
 
@@ -12,31 +17,33 @@
 
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
-| [OVERVIEW.md](./OVERVIEW.md) | Milestone 整體目標、三個 phases、成功標準 | ✅ 完成 |
+| [OVERVIEW.md](./OVERVIEW.md) | Milestone 整體目標、四個 phases、成功標準 | ✅ 完成 |
 | [INDEX.md](./INDEX.md) | 本檔案，文檔索引 | ✅ 完成 |
 
 ### Phase 規劃文檔
 
-#### Phase 1.2A：Core Timeout Hardening
+#### Phase 2：Core Timeout Hardening ✅ 已完成
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
-| [phase-1.2a/PLAN.md](./phase-1.2a/PLAN.md) | Phase 1.2A 實現計畫、5 個任務分解 | ✅ 完成 |
-| phase-1.2a/STATE.md | Phase 執行狀態、進度記錄 | 📋 待執行 |
-| phase-1.2a/VERIFICATION.md | Phase 驗收報告 | 📋 待執行 |
+| [../phases/02-dispatch-timeout-hardening/02-PLAN.md](../phases/02-dispatch-timeout-hardening/02-PLAN.md) | 權威實現計畫 | ✅ 完成 |
+| [../phases/02-dispatch-timeout-hardening/2-SUMMARY.md](../phases/02-dispatch-timeout-hardening/2-SUMMARY.md) | 執行結果 SUMMARY | ✅ 完成 |
+| phase-1.2a/PLAN.md | 原始規劃文檔（歷史參考，已被上方權威版取代） | 📁 存檔 |
 
-#### Phase 1.2B：Retry Wrapper Implementation
+#### Phase 3：Source/安裝副本分岔修復 🆕
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
-| [phase-1.2b/PLAN.md](./phase-1.2b/PLAN.md) | Phase 1.2B 實現計畫、5 個任務分解 | ✅ 完成 |
-| phase-1.2b/STATE.md | Phase 執行狀態、進度記錄 | 📋 待執行 |
-| phase-1.2b/VERIFICATION.md | Phase 驗收報告 | 📋 待執行 |
+| [../phases/03-dispatch-source-install-drift/03-PLAN.md](../phases/03-dispatch-source-install-drift/03-PLAN.md) | 權威實現計畫 | ✅ 完成 |
+| ../phases/03-dispatch-source-install-drift/3-SUMMARY.md | 執行結果 SUMMARY | 📋 待執行 |
 
-#### Phase 1.2C：Integration & Testing
+#### Phase 4（原 1.2B）：Retry Wrapper Implementation
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
-| [phase-1.2c/PLAN.md](./phase-1.2c/PLAN.md) | Phase 1.2C 實現計畫、7 個任務分解 | ✅ 完成 |
-| phase-1.2c/STATE.md | Phase 執行狀態、進度記錄 | 📋 待執行 |
-| phase-1.2c/VERIFICATION.md | Phase 驗收報告 | 📋 待執行 |
+| [phase-1.2b/PLAN.md](./phase-1.2b/PLAN.md) | 實現計畫、5 個任務分解 | ✅ 完成（待轉為 `.planning/phases/04-*/04-PLAN.md` 標準結構） |
+
+#### Phase 5（原 1.2C）：Integration & Testing
+| 文檔 | 用途 | 狀態 |
+|------|------|------|
+| [phase-1.2c/PLAN.md](./phase-1.2c/PLAN.md) | 實現計畫、7 個任務分解 | ✅ 完成（待轉為 `.planning/phases/05-*/05-PLAN.md` 標準結構） |
 
 ---
 

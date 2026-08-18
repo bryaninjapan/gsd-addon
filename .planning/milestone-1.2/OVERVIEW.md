@@ -1,9 +1,9 @@
 # Milestone 1.2：GSD-Dispatch 韌性與重試機制
 
-**版本**: 1.0  
-**狀態**: 🔄 規劃中  
+**版本**: 1.1  
+**狀態**: 🔄 進行中（Phase 2 完成）  
 **開始日期**: 2026-08-19  
-**預計完成**: 2026-08-20  
+**預計完成**: 2026-08-21  
 **所有者**: Claude Code  
 
 ---
@@ -14,9 +14,12 @@
 
 ### 核心問題
 
-1. **超時風險**：`opencode run`、`curl`、`git` 三處無超時，可能導致派工永不返回
+1. **超時風險**：`opencode run`、`curl`、`git` 三處無超時，可能導致派工永不返回（✅ Phase 2 已修復）
 2. **單點失敗**：OpenCode 伺服器暫時性故障導致整個派工失敗（如 err_13bbe49a、err_63d358ee）
 3. **啟動機制**：目前 wrapper 無法優雅地集成到現有的 `gsd-dispatch` 全域命令
+4. **新發現（2026-08-18 執行 Phase 2 時）**：source repo 與 `~/.claude/gsd-addon` 已安裝副本已分岔
+   ——已安裝副本是未提交的 prompts-based 重構版本，且帶有 `build_prompt()` 插值 bug，導致派工
+   回報假性失敗（士兵其實已完成工作並 commit，但 dispatch 腳本自己收尾時崩潰回報 exit 1）
 
 ### 成功標準
 
@@ -37,26 +40,27 @@
 
 ---
 
-## 🎯 三個 Phases 分解
+## 🎯 四個 Phases 分解（對應 ROADMAP 正式 Phase 2-5）
 
-### Phase 1.2A：Core Timeout Hardening
-**目標**: 修復 gsd-dispatch.sh 中的三處無超時命令  
-**時間**: 1-2 小時  
-**交付物**: 更新的 gsd-dispatch.sh（帶 timeout）
+### Phase 2：Core Timeout Hardening ✅ 已完成
+**目標**: 修復 gsd-dispatch.sh 中的三處無超時命令
+**實際耗時**: ~30 分鐘（4 個 commits：3dde38d..fa0d305）
+**交付物**: 更新的 gsd-dispatch.sh（純 bash `run_with_timeout`，零外部依賴）
 
-#### 具體任務
-- 為 `opencode run` 添加 `timeout 3600`（1 小時派工上限）
-- 為 `curl` 檢查添加 `--max-time 5`（5 秒超時）
-- 為 `git diff` 添加超時保護
-
-#### 成功驗收
-- 修改後的 gsd-dispatch.sh 語法檢查通過
-- 每個 timeout 處都有註釋說明原因
-- 超時場景下返回正確的 exit code（124）
+**詳細規劃**: [`.planning/phases/02-dispatch-timeout-hardening/02-PLAN.md`](../phases/02-dispatch-timeout-hardening/02-PLAN.md)（權威版本，取代本文檔原本的 Phase 1.2A 規劃）
 
 ---
 
-### Phase 1.2B：Retry Wrapper Implementation
+### Phase 3：Source/安裝副本分岔修復 🆕（執行 Phase 2 時發現，插入此處）
+**目標**: 協調 source repo 與 `~/.claude/gsd-addon` 已安裝副本的分岔，修復 `build_prompt()` 插值 bug
+**時間**: 2 小時
+**交付物**: 兩份 gsd-dispatch.sh 內容一致 + bug 修復
+
+**詳細規劃**: [`.planning/phases/03-dispatch-source-install-drift/03-PLAN.md`](../phases/03-dispatch-source-install-drift/03-PLAN.md)
+
+---
+
+### Phase 4（原 1.2B）：Retry Wrapper Implementation
 **目標**: 創建 dispatch-with-retry.sh，具備智能重試和錯誤分類  
 **時間**: 2-3 小時  
 **交付物**: dispatch-with-retry.sh + 更新的 install.sh
@@ -68,26 +72,28 @@
 - 修改 install.sh 支持全域命令中的環境變數邏輯
 
 #### 成功驗收
-- Wrapper 執行成功：`RETRY=true gsd-dispatch 2 discuss`
+- Wrapper 執行成功：`RETRY=true gsd-dispatch 2`
 - 能正確區分三類錯誤（不重試參數/權限錯誤，重試派工失敗）
 - 日誌文件能記錄重試過程
 
+**注意**: 待 Phase 3 完成後，兩份檔案應已一致，此 Phase 只需處理一份邏輯
+
 ---
 
-### Phase 1.2C：Integration & Testing
+### Phase 5（原 1.2C）：Integration & Testing
 **目標**: 集成測試 + soapwavehealing 端對端驗證  
 **時間**: 2-3 小時  
 **交付物**: 測試報告 + 驗收檔案
 
 #### 具體任務
-- 在 soapwavehealing 中測試 `RETRY=true gsd-dispatch 2 discuss`
+- 在 soapwavehealing 中測試 `RETRY=true gsd-dispatch <phase>`
 - 驗證重試不會與 GSD checkpoint 機制衝突
 - 驗證超時時間合理（不會太短導致誤觸發）
-- 驗證默認行為不變（`gsd-dispatch 2 discuss` 仍無重試）
+- 驗證默認行為不變（`gsd-dispatch <phase>` 仍無重試）
 - 更新 DEVELOPMENT-WORKFLOW.md 文檔
 
 #### 成功驗收
-- soapwavehealing Phase 2 研究成功派工（有無重試都可）
+- soapwavehealing 派工成功（有無重試都可）
 - 重試機制在實際場景中有效
 - 文檔清楚說明如何使用重試機制
 
@@ -97,20 +103,22 @@
 
 | Phase | 規劃 | 實現 | 測試 | 文檔 | 總計 |
 |-------|------|------|------|------|------|
-| 1.2A  | 30m  | 30m  | 30m  | 30m  | 2h   |
-| 1.2B  | 30m  | 1.5h | 1h   | 30m  | 3.5h |
-| 1.2C  | 30m  | 30m  | 1.5h | 1h   | 3.5h |
-| **總計** | | | | | **9h** |
+| 2（超時加固） | — | — | — | — | ✅ 完成 |
+| 3（分岔修復） | 30m | 30m | 30m | 30m | 2h |
+| 4（重試 wrapper） | 30m  | 1.5h | 1h   | 30m  | 3.5h |
+| 5（集成測試） | 30m  | 30m  | 1.5h | 1h   | 3.5h |
+| **剩餘總計** | | | | | **9h** |
 
-**預計完成**: 2026-08-20（1-2 天，取決於測試過程中的發現）
+**預計完成**: 2026-08-21
 
 ---
 
 ## 🔗 相關文檔
 
-- `.planning/milestone-1.2/phase-1.2a/` — Phase 1.2A 規劃與進度
-- `.planning/milestone-1.2/phase-1.2b/` — Phase 1.2B 規劃與進度
-- `.planning/milestone-1.2/phase-1.2c/` — Phase 1.2C 規劃與進度
+- `.planning/phases/02-dispatch-timeout-hardening/` — Phase 2 權威規劃與 SUMMARY（✅ 已完成）
+- `.planning/phases/03-dispatch-source-install-drift/` — Phase 3 權威規劃
+- `.planning/milestone-1.2/phase-1.2b/` — Phase 4（原 1.2B）規劃參考
+- `.planning/milestone-1.2/phase-1.2c/` — Phase 5（原 1.2C）規劃參考
 - `.planning/debug/gsd-dispatch-opencode-server-error.md` — 背景問題記錄
 - `DEVELOPMENT-WORKFLOW.md` — 派工排障章節（需更新）
 
