@@ -117,7 +117,8 @@ if [[ ! -f "$PROMPT_TEMPLATE" ]]; then
   exit 1
 fi
 
-if [[ -z "$PHASE" ]]; then
+# ---- 用法/--help ----
+show_usage() {
   echo "用法: $0 <phase> [model]"
   echo "範例: $0 7                         (execute mode)"
   echo "      MODE=research $0 8            (research mode)"
@@ -126,6 +127,16 @@ if [[ -z "$PHASE" ]]; then
   echo "      MODE=revise $0 2              (revise mode — 依 PLAN-CHECK.md 修訂 PLAN.md)"
   echo "      $0 6.3 opencode/kimi-k2.6"
   echo "      SERVER_URL=http://localhost:4096 TARGET_DIR=/etf $0 8"
+  echo "      RETRY=true gsd-dispatch 4     (啟用重試 wrapper:最多 3 次,指數退避)"
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  show_usage
+  exit 0
+fi
+
+if [[ -z "$PHASE" ]]; then
+  show_usage
   exit 1
 fi
 
@@ -391,3 +402,8 @@ else
   echo "    tail -f $LOG_FILE"
 fi
 echo "════════════════════════════════════════════════════════"
+
+# ---- 回傳派工結果(供 retry wrapper / 呼叫方判斷成敗)----
+# 之前這裡一律隱式 exit 0,即使 opencode 失敗也傳 0,retry wrapper 因而
+# 無法偵測失敗。現在把 DISPATCH_RC 傳出去:成功=0,逾時=124,其他=opencode exit code。
+exit "$DISPATCH_RC"
