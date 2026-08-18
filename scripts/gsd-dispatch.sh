@@ -152,39 +152,12 @@ print(text)
 '
 }
 
-# ---- 預檢:跨專案外部目錄權限 ----
-# 無頭模式對工作目錄以外的路徑會 auto-reject。掃 PLAN.md 找外部絕對路徑,
-# 對照 opencode.json 白名單,缺的話先警告(否則士兵會空手而回)。
-preflight_external_perms() {
-  local plan oc_json="${PROJECT_DIR}/.opencode/opencode.json"
-  # 若 TARGET_DIR/.planning 不存在，無外部路徑需檢查
-  [[ ! -d "${TARGET_DIR}/.planning" ]] && return 0
-  plan="$(find "${TARGET_DIR}/.planning" -path "*${PHASE}*" -name 'PLAN.md' 2>/dev/null | head -1)" || true
-  [[ -z "$plan" || ! -f "$oc_json" ]] && return 0
-  # 抓 PLAN 裡 /Users/... 形式、且不在工作目錄底下的絕對路徑根(取前 4 段)
-  local ext_roots
-  ext_roots="$(grep -oE '/Users/[^ )"'"'"']+' "$plan" 2>/dev/null \
-    | grep -v "^${PROJECT_DIR}" \
-    | sed -E 's#(/[^/]+/[^/]+/[^/]+/[^/]+)/.*#\1#' | sort -u)"
-  [[ -z "$ext_roots" ]] && return 0
-  local missing=()
-  while IFS= read -r root; do
-    [[ -z "$root" ]] && continue
-    grep -q "$root" "$oc_json" || missing+=("$root")
-  done <<< "$ext_roots"
-  if [[ ${#missing[@]} -gt 0 ]]; then
-    echo "⚠️  預檢警告:PLAN.md 引用了工作目錄以外的路徑,但 opencode.json 未授權讀取:"
-    printf '     %s\n' "${missing[@]}"
-    echo "     無頭模式會自動拒權 → 士兵讀不到、空手而回。"
-    echo "     修法:在 .opencode/opencode.json 的 read 與 external_directory 兩處各加:"
-    echo "       \"<上述路徑>/**\": \"allow\""
-    echo "────────────────────────────────────────────────────────"
-  fi
-}
-# 註:preflight_external_perms 只在 --command 派工模式下有意義(要求
-# TARGET_DIR 以外的路徑在 PROJECT_DIR 的 opencode.json 白名單裡)。
-# 現在一律 cd 進 TARGET_DIR 執行,prompt 範本也只用相對路徑,不再需要
-# 跨目錄白名單,故保留函式定義但不呼叫。
+# NOTE: preflight_external_perms() was removed (WR-02).
+# It was only relevant to --command dispatch mode (required TARGET_DIR paths to be
+# whitelisted in PROJECT_DIR's opencode.json). Now dispatch always cd's into TARGET_DIR
+# and uses relative paths in prompt templates, so cross-directory whitelisting is no
+# longer needed. The function was never called; it has been deleted rather than retained
+# as dead code.
 
 # ---- 派工前檢查:TARGET_DIR 有效性(本地 + 跨專案都驗證) ----
 # 驗證 TARGET_DIR 存在且是目錄
