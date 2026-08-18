@@ -91,13 +91,11 @@ if [ -f "$GSD_ADDON_HOME/gsd-config.sh" ]; then
 fi
 
 # 查找 dispatch 可執行檔
-if [ -f "$GSD_ADDON_HOME/dispatch/dispatch.sh" ]; then
-    exec "$GSD_ADDON_HOME/dispatch/dispatch.sh" "$@"
-elif command -v opencode &> /dev/null; then
-    # 委託給 gsd-framework 的 dispatch
-    exec opencode gsd dispatch "$@"
+if [ -f "$GSD_ADDON_HOME/scripts/gsd-dispatch.sh" ]; then
+    exec "$GSD_ADDON_HOME/scripts/gsd-dispatch.sh" "$@"
 else
-    echo "❌ dispatch.sh not found and opencode not available" >&2
+    echo "❌ gsd-dispatch.sh not found at $GSD_ADDON_HOME/scripts/" >&2
+    echo "   Please check your gsd-addon installation." >&2
     exit 1
 fi
 EOF
