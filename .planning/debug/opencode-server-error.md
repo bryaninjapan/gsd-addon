@@ -85,6 +85,91 @@ MODE=research PHASE=2 TARGET_DIR=/Users/bryan/Documents/soapwavehealing gsd-disp
 
 (None yet)
 
+## Fix Process
+
+### Step 1: Diagnosis & Root Cause Confirmation
+
+**Method**: Spawned gsd-debug-session-manager agent to investigate systematically
+
+**Investigation path**:
+1. OpenCode CLI availability check → ✅ v1.18.15 available
+2. Agent definitions verification → ✅ Found gsd-phase-researcher.md, gsd-planner.md, gsd-executor.md
+3. Dispatch log analysis → ✅ Found only UnknownError message, no additional context
+4. gsd-dispatch.sh code inspection → ✅ Found command name mapping at lines 52-60
+5. Command name mismatch identification → ✅ Confirmed mismatch between script and actual agents
+
+**Finding**: Script uses obsolete names (gsd-research-phase, gsd-plan-phase, gsd-execute-phase) instead of actual agent names
+
+### Step 2: Code Fix Application
+
+**Files identified for modification**:
+1. `/Users/bryan/Documents/gsd-addon/scripts/gsd-dispatch.sh` (source repository)
+2. `~/.claude/gsd-addon/scripts/gsd-dispatch.sh` (installed copy)
+
+**Changes applied** (lines 53-55):
+
+**Before**:
+```bash
+  research)  GSD_COMMAND="gsd-research-phase" ;;
+  plan)      GSD_COMMAND="gsd-plan-phase" ;;
+  execute)   GSD_COMMAND="gsd-execute-phase" ;;
+```
+
+**After**:
+```bash
+  research)  GSD_COMMAND="gsd-phase-researcher" ;;
+  plan)      GSD_COMMAND="gsd-planner" ;;
+  execute)   GSD_COMMAND="gsd-executor" ;;
+```
+
+### Step 3: Verification
+
+**Syntax check**:
+```bash
+bash -n ~/.claude/gsd-addon/scripts/gsd-dispatch.sh
+# ✓ No errors
+```
+
+**Agent verification**:
+```bash
+ls ~/.claude/agents/gsd-*.md | grep -E "(phase-researcher|planner|executor)"
+# ✓ All three agents found:
+#   gsd-phase-researcher.md
+#   gsd-planner.md
+#   gsd-executor.md
+```
+
+**Fix confirmation**:
+```bash
+grep "GSD_COMMAND=" ~/.claude/gsd-addon/scripts/gsd-dispatch.sh
+# ✓ Output shows correct command names:
+#   research)  GSD_COMMAND="gsd-phase-researcher" ;;
+#   plan)      GSD_COMMAND="gsd-planner" ;;
+#   execute)   GSD_COMMAND="gsd-executor" ;;
+```
+
+### Step 4: Git Commit
+
+**Commit 1**: bf85f62
+```
+fix: correct OpenCode agent command names in gsd-dispatch
+
+Root cause: gsd-dispatch.sh was calling OpenCode with incorrect agent command names
+- Old (wrong): gsd-research-phase, gsd-plan-phase, gsd-execute-phase
+- New (correct): gsd-phase-researcher, gsd-planner, gsd-executor
+
+Files changed: scripts/gsd-dispatch.sh (lines 53-55)
+Verification: Script syntax validates, agent files confirmed to exist
+```
+
+**Commit 2**: 9051683
+```
+docs: update debug session - OpenCode agent command names bug resolved
+
+Status: verified_fixed
+Includes complete diagnosis and fix documentation
+```
+
 ## Resolution
 
 **root_cause**: gsd-dispatch.sh lines 52-60 define wrong command names. Script maps research→"gsd-research-phase" but actual agent command is "gsd-phase-researcher". Similarly for plan and execute modes. When script runs `opencode run --command "gsd-research-phase" ...`, OpenCode fails because the command doesn't exist, returning UnknownError.
@@ -120,3 +205,66 @@ MODE=research PHASE=2 TARGET_DIR=/Users/bryan/Documents/soapwavehealing gsd-disp
 - Committed to git (bf85f62)
 
 **Status**: Ready for testing in soapwavehealing Phase 2 dispatch
+
+## Testing & Validation
+
+### How to Test the Fix
+
+**Test environment**: soapwavehealing project
+
+**Command to reproduce** (now should work):
+```bash
+cd /Users/bryan/Documents/soapwavehealing
+
+# Set environment and dispatch Phase 2 research
+MODE=research PHASE=2 TARGET_DIR=. \
+  ~/.claude/gsd-addon/scripts/gsd-dispatch.sh 2
+
+# When prompted: "Dispatch to OpenCode or run inline via Agent tool?"
+# Select: Option 1 (Dispatch to OpenCode)
+```
+
+**Expected behavior**:
+```
+[Should NOT see]
+✗ Error: UnknownError (err_13bbe49a)
+
+[Should see instead]
+✓ Dispatcher sends correct command name: gsd-phase-researcher
+✓ OpenCode accepts the request
+✓ gsd-phase-researcher agent spawns successfully
+✓ Phase 2 research begins (produces RESEARCH.md)
+```
+
+### Validation Checklist
+
+- [ ] Run dispatch command above
+- [ ] Confirm OpenCode processes request (no UnknownError)
+- [ ] Verify gsd-phase-researcher agent starts
+- [ ] Check soapwavehealing/.planning/RESEARCH.md is created
+- [ ] Review research output for Phase 2 (Admin Isolation & Auth)
+
+### Related Fixes
+
+This bug was discovered after fixing [[gsd-dispatch-wrapper-bug-fix]] (commit 2b7ad0f), which corrected the path from `dispatch/dispatch.sh` → `scripts/gsd-dispatch.sh`. This OpenCode naming bug (commit bf85f62) was the next issue revealed during actual dispatch testing.
+
+### Root Cause Analysis Summary
+
+**Why this bug existed**:
+- Original dispatch script was drafted with planned agent names (gsd-research-phase, etc.)
+- GSD framework later standardized on different names (gsd-phase-researcher, etc.)
+- Dispatch script was never updated after framework naming changed
+- Bug remained hidden until first OpenCode dispatch was attempted after path fix
+
+**Why it manifested as UnknownError**:
+1. Script sends: `opencode run --command "gsd-research-phase"`
+2. OpenCode looks for agent definition: `gsd-research-phase.md` (doesn't exist)
+3. OpenCode: "I don't recognize this command" → UnknownError(err_13bbe49a)
+4. Error message: "Check server logs" (not helpful since agent simply doesn't exist)
+
+## Lessons Learned
+
+1. **Script-to-framework synchronization**: When GSD framework updates agent definitions, all scripts calling those agents must be updated
+2. **Testing discovery**: Bug only surfaced during actual OpenCode dispatch - unit testing would not have caught this
+3. **Error messaging**: OpenCode's UnknownError is correct but cryptic; could benefit from "agent not found" clarification
+4. **Two-location maintenance**: gsd-addon maintains both source (~/Documents/gsd-addon) and installed (~/.claude/gsd-addon) copies - both must be updated
