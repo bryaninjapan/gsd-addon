@@ -29,7 +29,7 @@
 
 **Milestone 1.2 包含**:
 - ✅ Phase 2: Core Timeout Hardening（修復 opencode run、curl、git 超時，commit 3dde38d..fa0d305）
-- Phase 3: Source/安裝副本分岔修復（協調 source repo 與 `~/.claude/gsd-addon` 已安裝副本、修 build_prompt 226 行 bug）
+- ✅ Phase 3: Source/安裝副本分岔修復（prompts-based 設計回灌 source repo，兩份 gsd-dispatch.sh 完全一致，commit 34123d7..a9d58e7）
 - Phase 4: Retry Wrapper Implementation（創建 dispatch-with-retry.sh）
 - Phase 5: Integration & Testing（啟動機制 + soapwavehealing 驗證）
 
@@ -247,7 +247,7 @@
 | 里程碑 | Phase | 預定日期 | 完成日期 | 狀態 |
 |--------|-------|---------|---------|------|
 | Milestone 1.1 | 1 | 2026-08-22 | 2026-08-18 | ✅ 完成 |
-| Milestone 1.2 | 2, 3, 4, 5 | 2026-08-21 | — | 🔄 進行中（Phase 2 完成）|
+| Milestone 1.2 | 2, 3, 4, 5 | 2026-08-21 | — | 🔄 進行中（Phase 2+3 完成）|
 | 社區反饋 | 6 | 2026-09-15 | — | ⏳ 待執行 |
 | OpenCode/Codex | 7 | 2026-10-15 | — | ⏳ 待執行 |
 | Hermes 集成 | 8 | 2026-11-15 | — | ⏳ 待執行 |
