@@ -38,7 +38,7 @@ GSD Addon provides:
 
 ```bash
 # Clone this repository
-git clone https://github.com/yourusername/gsd-addon.git
+git clone https://github.com/bryaninjapan/gsd-addon.git
 cd gsd-addon
 
 # Run installation
@@ -288,9 +288,9 @@ This project is licensed under the MIT License — see [LICENSE](./LICENSE) file
 
 ## 🚀 Quick Links
 
-- **Repository**: [github.com/yourusername/gsd-addon](https://github.com/yourusername/gsd-addon)
-- **Releases**: [Releases](https://github.com/yourusername/gsd-addon/releases)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/gsd-addon/issues)
+- **Repository**: [github.com/bryaninjapan/gsd-addon](https://github.com/bryaninjapan/gsd-addon)
+- **Releases**: [Releases](https://github.com/bryaninjapan/gsd-addon/releases)
+- **Issues**: [GitHub Issues](https://github.com/bryaninjapan/gsd-addon/issues)
 
 ---
 
