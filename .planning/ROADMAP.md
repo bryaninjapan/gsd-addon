@@ -1,9 +1,9 @@
 # GSD Addon — 路線圖
 
-**Roadmap Version**: 1.1  
-**Total Phases**: 4  
-**Total Milestones**: 2  
-**Status**: Milestone 1.1 Complete - Phase 1 Complete + Bug Fixes
+**Roadmap Version**: 1.2  
+**Total Phases**: 7  
+**Total Milestones**: 3  
+**Status**: Milestone 1.1 Complete - Phase 1 Complete + Bug Fixes; Milestone 1.2 In Planning
 
 ---
 
@@ -18,6 +18,26 @@
 - ✅ Bug Fix: gsd-dispatch wrapper path mismatch (commit 2b7ad0f)
 - ✅ Bug Fix Verification: gsd-dispatch fix verification workflow (commit 5f0743c)
 - ✅ Debug Session Documentation & Archival
+
+---
+
+## 里程碑 1.2：派工系統韌性與重試機制 (v1.2)
+
+**交付物**: gsd-dispatch 超時保護 + 重試機制 + 啟動優化  
+**完成時間**: TBD（規劃中）  
+**成功標準**: ✅ 超時修復 + 重試 wrapper + 啟動機制 + 端對端驗證
+
+**Milestone 1.2 包含**:
+- Phase 2: Core Timeout Hardening（修復 opencode run、curl、git 超時）
+- Phase 3: Retry Wrapper Implementation（創建 dispatch-with-retry.sh）
+- Phase 4: Integration & Testing（啟動機制 + soapwavehealing 驗證）
+
+**詳細規劃**: 見 [.planning/milestone-1.2/](./milestone-1.2/) 目錄（phase-1.2a/b/c 為原始規劃文檔，實際執行以 `.planning/phases/02-*/03-*/04-*/` 標準結構為準）
+
+**背景**: 
+- Issue: gsd-dispatch.sh 在 opencode 伺服器暫時性故障時缺乏重試機制
+- Root Cause: 三處無超時的命令可能導致派工永不返回（opencode run、curl、git）
+- Solution: 添加 timeout + 創建智能重試 wrapper
 
 ---
 
@@ -105,15 +125,15 @@
 
 ---
 
-## 里程碑 2：社區反饋與迭代
+## 里程碑 3：社區反饋與迭代
 
 **交付物**: v1.1 Bug Fix 版  
-**時間估算**: Phase 2 (2 週後)  
+**時間估算**: Phase 5 (2 週後)  
 **成功標準**: 社區反饋 → 修復 → 新版本發佈
 
 ---
 
-## Phase 2: 社區反饋與迭代
+## Phase 5: 社區反饋與迭代
 
 **目標**: 收集反饋並修復 Phase 1 發現的問題
 
@@ -121,26 +141,26 @@
 
 ### 預期改進
 
-#### 2.1 基於社區反饋的修復
+#### 5.1 基於社區反饋的修復
 
 - [ ] 修復 GitHub issues（若有提交）
 - [ ] 更新文檔釐清常見誤解
 - [ ] 修復發現的 bug（若有）
 - [ ] 支持更多環境（若需要）
 
-#### 2.2 性能優化
+#### 5.2 性能優化
 
 - [ ] 派工腳本執行時間優化
 - [ ] 測試框架記憶體優化（如需要）
 - [ ] 文檔快速查找改善
 
-#### 2.3 擴展功能
+#### 5.3 擴展功能
 
 - [ ] 補充更多派工模式範例
 - [ ] 新增故障恢復腳本（如需要）
 - [ ] 擴展環境配置支持
 
-### Phase 2 成功標準
+### Phase 5 成功標準
 
 - [ ] 至少 5 個 GitHub issue 已關閉
 - [ ] v1.1 版本發佈
@@ -148,7 +168,7 @@
 
 ---
 
-## Phase 3: OpenCode/Codex 支持擴展
+## Phase 6: OpenCode/Codex 支持擴展
 
 **目標**: 為 OpenCode 和 Codex 添加 ScheduleWakeup 支持
 
@@ -156,27 +176,27 @@
 
 ### 任務清單
 
-#### 3.1 OpenCode ScheduleWakeup 實現
+#### 6.1 OpenCode ScheduleWakeup 實現
 
 - [ ] 研究 OpenCode 的排程 API（待發佈）
 - [ ] 實現 `scripts/schedule-wakeup/opencode.sh`
 - [ ] 編寫文檔與範例
 - [ ] 在生產項目驗證
 
-#### 3.2 Codex 支持
+#### 6.2 Codex 支持
 
 - [ ] 設計 Codex 派工 API
 - [ ] 實現 `scripts/dispatch/codex.py`
 - [ ] 實現 Codex ScheduleWakeup
 - [ ] 集成測試
 
-#### 3.3 通用排程層
+#### 6.3 通用排程層
 
 - [ ] 抽象派工層（使不同運行時可互換）
 - [ ] 統一 ScheduleWakeup 接口
 - [ ] 性能對標（各運行時）
 
-### Phase 3 成功標準
+### Phase 6 成功標準
 
 - [ ] OpenCode ScheduleWakeup 實現完成
 - [ ] Codex 派工完整支持
@@ -185,7 +205,7 @@
 
 ---
 
-## Phase 4: Hermes 工作流集成
+## Phase 7: Hermes 工作流集成
 
 **目標**: 集成 Hermes 分佈式工作流引擎
 
@@ -193,25 +213,25 @@
 
 ### 任務清單
 
-#### 4.1 Hermes 集成
+#### 7.1 Hermes 集成
 
 - [ ] 研究 Hermes 工作流語言
 - [ ] 實現 `scripts/dispatch/hermes.cjs`
 - [ ] 支持複雜工作流（條件、平行、重試）
 
-#### 4.2 工作流範本庫
+#### 7.2 工作流範本庫
 
 - [ ] 建立 phase 工作流範本（phase 1→2→3 自動化）
 - [ ] 建立失敗恢復工作流
 - [ ] 建立成本優化工作流（凌晨派工等）
 
-#### 4.3 集群支持
+#### 7.3 集群支持
 
 - [ ] 支持多機器派工協調
 - [ ] 實現工作流進度追蹤
 - [ ] 集成監控與告警
 
-### Phase 4 成功標準
+### Phase 7 成功標準
 
 - [ ] Hermes 完整集成
 - [ ] 工作流範本庫完成（≥5 個範本）
@@ -224,10 +244,11 @@
 
 | 里程碑 | Phase | 預定日期 | 完成日期 | 狀態 |
 |--------|-------|---------|---------|------|
-| Milestone 1.1 | 1 + 1.1 | 2026-08-22 | 2026-08-18 | ✅ 完成 |
-| 社區反饋 | 2 | 2026-09-15 | — | ⏳ 待執行 |
-| OpenCode/Codex | 3 | 2026-10-15 | — | ⏳ 待執行 |
-| Hermes 集成 | 4 | 2026-11-15 | — | ⏳ 待執行 |
+| Milestone 1.1 | 1 | 2026-08-22 | 2026-08-18 | ✅ 完成 |
+| Milestone 1.2 | 2, 3, 4 | 2026-08-20 | — | 🔄 規劃中（Phase 2 準備派工）|
+| 社區反饋 | 5 | 2026-09-15 | — | ⏳ 待執行 |
+| OpenCode/Codex | 6 | 2026-10-15 | — | ⏳ 待執行 |
+| Hermes 集成 | 7 | 2026-11-15 | — | ⏳ 待執行 |
 
 ---
 
@@ -238,15 +259,19 @@ Phase 1 (推送驗證) ✅ (2026-08-18)
     ↓
 Milestone 1.1 (Bug 修復驗證) ✅ (2026-08-18)
     ↓
-Phase 2 (社區反饋) ⏳ (start 2026-09-01)
+Milestone 1.2 (韌性與重試) 🔄 (start 2026-08-19)
+  Phase 2 (超時修復) → Phase 3 (重試 wrapper) → Phase 4 (集成驗證)
     ↓
-Phase 3 (OpenCode/Codex) ⏳ (start 2026-09-15)
+Phase 5 (社區反饋) ⏳ (start 2026-09-01)
     ↓
-Phase 4 (Hermes) ⏳ (start 2026-10-15)
+Phase 6 (OpenCode/Codex) ⏳ (start 2026-09-15)
+    ↓
+Phase 7 (Hermes) ⏳ (start 2026-10-15)
 ```
 
-**Milestone 1.1 必須完成**才能進入 Phase 2。  
-**Phase 2-4 可基於需求優先順序調整。**
+**Milestone 1.1 必須完成**才能進入 Milestone 1.2。  
+**Milestone 1.2 必須完成**才能進入 Phase 5。  
+**Phase 5-7 可基於需求優先順序調整。**
 
 ---
 
