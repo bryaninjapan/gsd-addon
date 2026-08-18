@@ -1,7 +1,7 @@
 # Milestone 1.2：GSD-Dispatch 韌性與重試機制 — 文檔索引
 
 **創建日期**: 2026-08-19  
-**狀態**: 🔄 進行中（Phase 2 完成，4/5 個 phases 待執行）  
+**狀態**: 🔄 進行中（Phase 3 完成，2/4 個 phases 待執行）  
 **所有者**: Bryan (claude)  
 
 **編號對照**: 本目錄下的 `phase-1.2a/b/c` 是最初規劃時的命名，實際執行改用 GSD 標準目錄結構
@@ -29,21 +29,25 @@
 | [../phases/02-dispatch-timeout-hardening/2-SUMMARY.md](../phases/02-dispatch-timeout-hardening/2-SUMMARY.md) | 執行結果 SUMMARY | ✅ 完成 |
 | phase-1.2a/PLAN.md | 原始規劃文檔（歷史參考，已被上方權威版取代） | 📁 存檔 |
 
-#### Phase 3：Source/安裝副本分岔修復 🆕
+#### Phase 3：Source/安裝副本分岔修復 ✅ 已完成（2026-08-19）
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
 | [../phases/03-dispatch-source-install-drift/03-PLAN.md](../phases/03-dispatch-source-install-drift/03-PLAN.md) | 權威實現計畫 | ✅ 完成 |
-| ../phases/03-dispatch-source-install-drift/3-SUMMARY.md | 執行結果 SUMMARY | 📋 待執行 |
+| [../phases/03-dispatch-source-install-drift/3-SUMMARY.md](../phases/03-dispatch-source-install-drift/3-SUMMARY.md) | 執行結果 SUMMARY | ✅ 完成 |
+| [../phases/03-dispatch-source-install-drift/03-REVIEW.md](../phases/03-dispatch-source-install-drift/03-REVIEW.md) | Code Review 報告（12 項，3 Critical） | ✅ 完成 |
+| [../phases/03-dispatch-source-install-drift/03-REVIEW-FIX.md](../phases/03-dispatch-source-install-drift/03-REVIEW-FIX.md) | Code Review 修復報告（8/8 fixed） | ✅ 完成 |
 
-#### Phase 4（原 1.2B）：Retry Wrapper Implementation
+#### Phase 4（原 1.2B）：Retry Wrapper Implementation ⏳ 待執行
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
-| [phase-1.2b/PLAN.md](./phase-1.2b/PLAN.md) | 實現計畫、5 個任務分解 | ✅ 完成（待轉為 `.planning/phases/04-*/04-PLAN.md` 標準結構） |
+| [../phases/04-retry-wrapper/04-PLAN.md](../phases/04-retry-wrapper/04-PLAN.md) | 權威實現計畫（從 1.2b 遷移）| ✅ 完成 |
+| [phase-1.2b/PLAN.md](./phase-1.2b/PLAN.md) | 原始規劃文檔（歷史參考，已被上方版本取代）| 📁 存檔 |
 
-#### Phase 5（原 1.2C）：Integration & Testing
+#### Phase 5（原 1.2C）：Integration & Testing ⏳ 待執行
 | 文檔 | 用途 | 狀態 |
 |------|------|------|
-| [phase-1.2c/PLAN.md](./phase-1.2c/PLAN.md) | 實現計畫、7 個任務分解 | ✅ 完成（待轉為 `.planning/phases/05-*/05-PLAN.md` 標準結構） |
+| [../phases/05-integration-testing/05-PLAN.md](../phases/05-integration-testing/05-PLAN.md) | 權威實現計畫（從 1.2c 遷移） | ✅ 完成 |
+| [phase-1.2c/PLAN.md](./phase-1.2c/PLAN.md) | 原始規劃文檔（歷史參考，已被上方版本取代） | 📁 存檔 |
 
 ---
 
@@ -88,12 +92,12 @@
 
 | 項目 | 數值 |
 |------|------|
-| 總 Phases | 3 |
-| 總任務 | 17 |
-| 總規劃文檔 | 3 |
-| 總執行文檔 | 9 |
-| 預計總時間 | 9 小時 |
-| 預計完成日期 | 2026-08-20 |
+| 總 Phases | 4（Phase 2、3、4、5）|
+| 完成 Phases | 2（Phase 2、3）|
+| 待執行 Phases | 2（Phase 4、5）|
+| 總任務 | ~17 |
+| 總規劃文檔 | 5 |
+| 預計完成日期 | 2026-08-21 |
 
 ---
 

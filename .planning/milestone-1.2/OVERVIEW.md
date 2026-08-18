@@ -1,7 +1,7 @@
 # Milestone 1.2：GSD-Dispatch 韌性與重試機制
 
-**版本**: 1.1  
-**狀態**: 🔄 進行中（Phase 2 完成）  
+**版本**: 1.2  
+**狀態**: 🔄 進行中（Phase 3 完成 + Code Review 修復）  
 **開始日期**: 2026-08-19  
 **預計完成**: 2026-08-21  
 **所有者**: Claude Code  
@@ -51,10 +51,10 @@
 
 ---
 
-### Phase 3：Source/安裝副本分岔修復 🆕（執行 Phase 2 時發現，插入此處）
+### Phase 3：Source/安裝副本分岔修復 ✅ 已完成（2026-08-19）
 **目標**: 協調 source repo 與 `~/.claude/gsd-addon` 已安裝副本的分岔，修復 `build_prompt()` 插值 bug
-**時間**: 2 小時
-**交付物**: 兩份 gsd-dispatch.sh 內容一致 + bug 修復
+**實際耗時**: ~20 分鐘（4 commits: 34123d7..9a89b42）+ Code Review 修復 ~10 分鐘（8 commits: 957c1ac..11a72f7）
+**交付物**: 兩份 gsd-dispatch.sh 完全一致 + prompts/ 目錄新增至 source repo + 8 項 code review bug 修復
 
 **詳細規劃**: [`.planning/phases/03-dispatch-source-install-drift/03-PLAN.md`](../phases/03-dispatch-source-install-drift/03-PLAN.md)
 
@@ -104,7 +104,7 @@
 | Phase | 規劃 | 實現 | 測試 | 文檔 | 總計 |
 |-------|------|------|------|------|------|
 | 2（超時加固） | — | — | — | — | ✅ 完成 |
-| 3（分岔修復） | 30m | 30m | 30m | 30m | 2h |
+| 3（分岔修復） | — | — | — | — | ✅ 完成（含 code review 修復） |
 | 4（重試 wrapper） | 30m  | 1.5h | 1h   | 30m  | 3.5h |
 | 5（集成測試） | 30m  | 30m  | 1.5h | 1h   | 3.5h |
 | **剩餘總計** | | | | | **9h** |

@@ -3,7 +3,7 @@
 **Roadmap Version**: 1.3  
 **Total Phases**: 8  
 **Total Milestones**: 3  
-**Status**: Milestone 1.1 Complete - Phase 1 Complete + Bug Fixes; Milestone 1.2 In Progress (Phase 2 Complete)
+**Status**: Milestone 1.1 Complete - Phase 1 Complete + Bug Fixes; Milestone 1.2 In Progress (Phase 3 Complete + Code Review Fixed)
 
 ---
 
@@ -14,6 +14,7 @@
 **成功標準**: ✅ 代碼上線 + 文檔完成 + 生產驗證 + Bug 修復驗證
 
 **Milestone 1.1 包含**:
+
 - ✅ GitHub Push & Local Verification (Phase 1.2-1.5)
 - ✅ Bug Fix: gsd-dispatch wrapper path mismatch (commit 2b7ad0f)
 - ✅ Bug Fix Verification: gsd-dispatch fix verification workflow (commit 5f0743c)
@@ -28,14 +29,16 @@
 **成功標準**: ✅ 超時修復 + 重試 wrapper + 啟動機制 + 端對端驗證
 
 **Milestone 1.2 包含**:
+
 - ✅ Phase 2: Core Timeout Hardening（修復 opencode run、curl、git 超時，commit 3dde38d..fa0d305）
-- ✅ Phase 3: Source/安裝副本分岔修復（prompts-based 設計回灌 source repo，兩份 gsd-dispatch.sh 完全一致，commit 34123d7..a9d58e7）
+- ✅ Phase 3: Source/安裝副本分岔修復（prompts-based 設計回灌 source repo，兩份 gsd-dispatch.sh 完全一致，commit 34123d7..a9d58e7）+ Code Review 修復 8 項 bug（CR-01/02/03 + WR-01/02/03/04/05，commit 957c1ac..11a72f7）
 - Phase 4: Retry Wrapper Implementation（創建 dispatch-with-retry.sh）
 - Phase 5: Integration & Testing（啟動機制 + soapwavehealing 驗證）
 
 **詳細規劃**: 見 [.planning/milestone-1.2/](./milestone-1.2/) 目錄（phase-1.2a/b/c 為原始規劃文檔，實際執行以 `.planning/phases/02-*/03-*/04-*/05-*/` 標準結構為準）
 
 **背景**: 
+
 - Issue: gsd-dispatch.sh 在 opencode 伺服器暫時性故障時缺乏重試機制
 - Root Cause: 三處無超時的命令可能導致派工永不返回（opencode run、curl、git）
 - Solution: 添加 timeout + 創建智能重試 wrapper
@@ -106,21 +109,25 @@
 ### Phase 1 成功標準
 
 ✅ **代碼**:
+
 - [x] 所有代碼已上線 GitHub
 - [x] install.sh 執行成功
 - [x] 新環境安裝無錯誤
 
 ✅ **功能**:
+
 - [x] gsd-test 在 soapwavehealing 運行成功
 - [x] gsd-dispatch 派工成功
 - [x] ScheduleWakeup 延時派工設計完成
 
 ✅ **文檔**:
+
 - [x] 所有文檔完成（README、指南、集成指南）
 - [x] README 中的所有連結有效
 - [x] GitHub 上的展示正確
 
 ✅ **Bug 修復（Milestone 1.1）**:
+
 - [x] gsd-dispatch wrapper 路徑不匹配 bug 修復
 - [x] Bug 修復驗證測試工作流
 - [x] Debug session 文檔化與歸檔
@@ -299,6 +306,7 @@ Phase 8 (Hermes) ⏳ (start 2026-10-15)
 ### 何時停止擴展？
 
 若滿足以下條件，可考慮完成當前階段：
+
 - ✅ 核心功能穩定（Phase 1 完成）
 - ✅ 派工系統韌性完備（Milestone 1.2 / Phase 2-5 完成）
 - ✅ 社區採用 ≥ 5 個項目（Phase 6 完成）
@@ -307,6 +315,7 @@ Phase 8 (Hermes) ⏳ (start 2026-10-15)
 ### 優先順序調整
 
 若時間或資源限制，優先順序：
+
 1. **高**: Phase 1（GitHub 推送）
 2. **高**: Milestone 1.2 / Phase 2-5（派工韌性與重試）
 3. **中**: Phase 6（社區驗證）
