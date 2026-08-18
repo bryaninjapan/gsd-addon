@@ -1,10 +1,12 @@
 # GSD Addon — 統一派工與測試框架
 
 **Project Code**: GSD-ADDON  
+**Version**: v1.1  
 **Initiative**: Unified dispatch, test orchestration, and dynamic scheduling across GSD runtimes  
 **Scope**: Complete test framework + dispatch system + multi-runtime scheduling support  
 **Timeline**: 2 milestones, 4 phases  
-**Status**: Phase 1 initiated 2026-08-18  
+**Status**: ✅ Milestone 1.1 Complete (2026-08-18) | Phase 1 + Bug Fixes Delivered
+**GitHub**: https://github.com/bryaninjapan/gsd-addon  
 
 ---
 
