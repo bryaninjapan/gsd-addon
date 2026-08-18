@@ -129,7 +129,7 @@ extract_phase_section() {
   fi
   awk -v phase="$PHASE" '
     BEGIN { found=0 }
-    $0 ~ "^### Phase " phase "[:.]" { found=1; print; next }
+    $0 == "### Phase " phase ":" || $0 == "### Phase " phase "." { found=1; print; next }
     found && /^### Phase / { exit }
     found { print }
   ' "$roadmap"
