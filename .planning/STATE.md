@@ -1,21 +1,21 @@
 ---
-phase: "03"
-plan: "03"
+phase: "04"
+plan: "04"
 status: "Complete"
 last_activity: "2026-08-19"
 ---
 
 # GSD Addon — State
 
-**Current Phase**: 04 — retry-wrapper (next)
-**Current Plan**: (03 complete, 04 TBD)
-**Status**: Phase 03 Complete
+**Current Phase**: 05 — integration-testing (next)
+**Current Plan**: (04 complete, 05 TBD)
+**Status**: Phase 04 Complete
 **Last Activity**: 2026-08-19
 
 ## Current Position
 
-Phase 03 complete: Source/安裝副本分岔修復
-Next: Phase 04 — Retry Wrapper Implementation
+Phase 04 complete: Retry Wrapper Implementation
+Next: Phase 05 — Integration & Testing
 
 ## Decisions
 
@@ -23,14 +23,18 @@ Next: Phase 04 — Retry Wrapper Implementation
 - **build_prompt() Python env vars**: 確認當前安裝副本的插值方式安全，bug 已不存在
 - **cd TARGET_DIR 方式**: 取代 opencode.json 跨目錄白名單，跨專案派工更簡潔
 - **prompts/ 安裝強制**: install.sh 中缺少 prompts/ 時 exit 1（非警告）
+- **RETRY=true 切換重試 wrapper**: 全域命令讀 RETRY env；true → dispatch-with-retry.sh，否則 gsd-dispatch.sh
+- **重試策略**: MAX_RETRIES=3 指數退避；非重試(參數/權限/中斷) vs 重試(124/err_/network)
 
 ## Progress
 
 | Plan | Status |
 |------|--------|
 | 03 | ✅ Complete (2026-08-19) |
+| 04 | ✅ Complete (2026-08-19) |
 
 ## Session Log
 
 - 2026-08-18: Phase 02 complete (timeout hardening)
 - 2026-08-19: Phase 03 complete (source/install drift fixed, prompts backported)
+- 2026-08-19: Phase 04 complete (retry wrapper + RETRY routing + install.sh/gsd-config.sh fixes)
