@@ -51,6 +51,19 @@ else
     echo -e "${YELLOW}⚠ scripts directory not found (optional)${NC}"
 fi
 
+# ==================== 安裝 prompt 範本 ====================
+
+echo -e "${BLUE}📦 Installing dispatch prompt templates...${NC}"
+
+if [ -d "prompts" ]; then
+    mkdir -p "$GSD_ADDON_HOME/prompts"
+    cp -r prompts/* "$GSD_ADDON_HOME/prompts/" 2>/dev/null || true
+    echo -e "${GREEN}✓ dispatch prompts installed ($(ls prompts/*.md 2>/dev/null | wc -l | tr -d ' ') templates)${NC}"
+else
+    echo -e "${RED}✗ prompts directory not found — dispatch requires prompts/ templates${NC}"
+    exit 1
+fi
+
 # ==================== 安裝 gsd-test 框架 ====================
 
 echo -e "${BLUE}📦 Installing gsd-test framework...${NC}"

@@ -11,11 +11,13 @@
 #   ./scripts/gsd-dispatch.sh <phase> <model>                # 指定模型
 #   MODE=research ./scripts/gsd-dispatch.sh 8                # 切換 research mode
 #   MODE=plan ./scripts/gsd-dispatch.sh 2                    # 切換 plan mode(gsd-plan-phase)
+#   MODE=check ./scripts/gsd-dispatch.sh 2                   # 切換 check mode(gsd-plan-checker,驗證已產出的 PLAN.md)
+#   MODE=revise ./scripts/gsd-dispatch.sh 2                  # 切換 revise mode(依 PLAN-CHECK.md 修訂 PLAN.md)
 #   MODEL="opencode-go/kimi-k2.6" ./scripts/gsd-dispatch.sh 6.3
 #   VARIANT=minimal ./scripts/gsd-dispatch.sh 7              # 改成 effort minimal(便宜模式)
 #
 # 環境變數:
-#   MODE     派工模式:research | plan | execute(預設 execute)
+#   MODE     派工模式:research | plan | check | revise | execute(預設 execute)
 #   MODEL    士兵模型(預設 opencode-go/deepseek-v4-flash)
 #   VARIANT  reasoning effort:high / max / minimal(預設 high)
 #   SERVER_URL  共享 server URL(設了就 attach)
@@ -25,13 +27,24 @@
 #   ./scripts/gsd-dispatch.sh 7
 #   MODE=research ./scripts/gsd-dispatch.sh 8
 #   MODE=plan ./scripts/gsd-dispatch.sh 2
+#   MODE=check ./scripts/gsd-dispatch.sh 2
 #   ./scripts/gsd-dispatch.sh 6.3 opencode/kimi-k2.6
 #   SERVER_URL=http://localhost:4096 TARGET_DIR=/etf-project ./scripts/gsd-dispatch.sh 8
 #
 # 注意:MODE=plan 一次只會產出「下一份」缺的 PLAN.md(gsd-plan-phase 的標準行為
 # 是規劃整個 phase 的所有 plan)。若某個 phase 已經有部分 PLAN.md 在磁碟上
 # (例如前一次派工中途失敗),gsd-plan-phase 會偵測已存在的 plan 並接著補完,
-# 不會重新覆寫。跨專案派工(TARGET_DIR != PROJECT_DIR)尚未針對 plan mode 測試過。
+# 不會重新覆寫。
+#
+# 派工提示詞(prompt)不再依賴 `opencode run --command`(該機制需要目標端有
+# ClaudeWiki 的 .opencode/command + gsd-tools CLI,跨專案派工時常常解析不到,
+# 士兵會讀不到指令而空手而回或中途卡住)。改為:每個 MODE 對應
+# scripts/../prompts/<mode>.md 一份自包含的詳細提示詞範本(角色、檢查維度、
+# 產出檔案格式全部寫在範本裡),用 {{PHASE}} / {{TARGET_DIR}} / {{TODAY}} /
+# {{PHASE_SECTION}}(從 TARGET_DIR/.planning/ROADMAP.md 動態擷取的 phase 段落)
+# 做變數代換後,直接當作 freeform prompt 派給士兵,並且會先 cd 進 TARGET_DIR
+# 再執行,讓士兵能用專案內的相對路徑讀寫檔案。修改 prompts/*.md 就能讓某個
+# mode 的檢查更嚴謹,不需要改這支腳本本身。
 #
 set -euo pipefail
 
@@ -71,29 +84,73 @@ TARGET_DIR="${TARGET_DIR:-$PROJECT_DIR}"
 SERVER_URL="${SERVER_URL:-}"
 LOG_DIR="${PROJECT_DIR}/.planning/soldier-logs"
 LOG_FILE="${LOG_DIR}/phase-${PHASE}-$(date +%Y%m%d-%H%M%S).log"
+PROMPTS_DIR="${PROJECT_DIR}/prompts"
 
-# 選擇指令
+# 選擇指令(GSD_COMMAND 僅供顯示/log 用,實際派工一律用 prompts/<mode>.md 範本)
 case "$MODE" in
   research)  GSD_COMMAND="gsd-phase-researcher" ;;
   plan)      GSD_COMMAND="gsd-planner" ;;
+  check)     GSD_COMMAND="gsd-plan-checker" ;;
+  revise)    GSD_COMMAND="gsd-planner (revision)" ;;
   execute)   GSD_COMMAND="gsd-executor" ;;
   *)
-    echo "✗ MODE 必須是 research、plan 或 execute,得到: $MODE"
+    echo "✗ MODE 必須是 research、plan、check、revise 或 execute,得到: $MODE"
     exit 1
     ;;
 esac
+
+PROMPT_TEMPLATE="${PROMPTS_DIR}/${MODE}.md"
+if [[ ! -f "$PROMPT_TEMPLATE" ]]; then
+  echo "✗ 找不到 prompt 範本: $PROMPT_TEMPLATE"
+  exit 1
+fi
 
 if [[ -z "$PHASE" ]]; then
   echo "用法: $0 <phase> [model]"
   echo "範例: $0 7                         (execute mode)"
   echo "      MODE=research $0 8            (research mode)"
   echo "      MODE=plan $0 2                (plan mode)"
+  echo "      MODE=check $0 2               (check mode — 驗證已存在的 PLAN.md)"
+  echo "      MODE=revise $0 2              (revise mode — 依 PLAN-CHECK.md 修訂 PLAN.md)"
   echo "      $0 6.3 opencode/kimi-k2.6"
   echo "      SERVER_URL=http://localhost:4096 TARGET_DIR=/etf $0 8"
   exit 1
 fi
 
 mkdir -p "$LOG_DIR"
+
+# ---- 從 TARGET_DIR/.planning/ROADMAP.md 動態擷取「### Phase N」段落 ----
+# 擷取範圍:從符合 "### Phase <PHASE>[:.]" 的標題開始,到下一個 "### Phase " 標題(不含)為止。
+extract_phase_section() {
+  local roadmap="${TARGET_DIR}/.planning/ROADMAP.md"
+  if [[ ! -f "$roadmap" ]]; then
+    echo "(找不到 ${roadmap},請確認 TARGET_DIR 底下有 .planning/ROADMAP.md)"
+    return
+  fi
+  awk -v phase="$PHASE" '
+    BEGIN { found=0 }
+    $0 ~ "^### Phase " phase "[:.]" { found=1; print; next }
+    found && /^### Phase / { exit }
+    found { print }
+  ' "$roadmap"
+}
+
+# ---- 用 prompts/<mode>.md 範本 + 變數代換,組出士兵的 freeform prompt ----
+# 用 python3 做替換(避免 ROADMAP 內容含 / 或特殊字元弄壞 sed)。
+build_prompt() {
+  local template="$1" phase="$2" target_dir="$3" today="$4" phase_section="$5"
+  TPL="$template" PHASE="$phase" TARGET_DIR="$target_dir" TODAY="$today" PHASE_SECTION="$phase_section" \
+    python3 -c '
+import os
+with open(os.environ["TPL"], "r") as f:
+    text = f.read()
+text = text.replace("{{PHASE}}", os.environ["PHASE"])
+text = text.replace("{{TARGET_DIR}}", os.environ["TARGET_DIR"])
+text = text.replace("{{TODAY}}", os.environ["TODAY"])
+text = text.replace("{{PHASE_SECTION}}", os.environ["PHASE_SECTION"])
+print(text)
+'
+}
 
 # ---- 預檢:跨專案外部目錄權限 ----
 # 無頭模式對工作目錄以外的路徑會 auto-reject。掃 PLAN.md 找外部絕對路徑,
@@ -124,7 +181,10 @@ preflight_external_perms() {
     echo "────────────────────────────────────────────────────────"
   fi
 }
-preflight_external_perms
+# 註:preflight_external_perms 只在 --command 派工模式下有意義(要求
+# TARGET_DIR 以外的路徑在 PROJECT_DIR 的 opencode.json 白名單裡)。
+# 現在一律 cd 進 TARGET_DIR 執行,prompt 範本也只用相對路徑,不再需要
+# 跨目錄白名單,故保留函式定義但不呼叫。
 
 # ---- 派工前檢查:TARGET_DIR 有效性(本地 + 跨專案都驗證) ----
 # 驗證 TARGET_DIR 存在且是目錄
@@ -139,29 +199,9 @@ if ! git -C "$TARGET_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   echo "   (派工可能仍會執行,但 git diff 驗收會失敗)"
 fi
 
-# ---- 派工前檢查:TARGET_DIR 的 .opencode.json 權限 ----
-if [[ "$TARGET_DIR" != "$PROJECT_DIR" ]]; then
-  echo ""
-  echo "════════════════════════════════════════════════════════"
-  echo "  跨專案權限審計 — gsd-permission-audit"
-  echo "════════════════════════════════════════════════════════"
-
-  AUDIT_SCRIPT="${PROJECT_DIR}/scripts/gsd-permission-audit.sh"
-  if [[ ! -f "$AUDIT_SCRIPT" ]]; then
-    echo "✗ gsd-permission-audit.sh not found at $AUDIT_SCRIPT"
-    exit 1
-  fi
-
-  # 先只檢查(--fix 需使用者明確要求)
-  if ! "$AUDIT_SCRIPT" --target "$TARGET_DIR" 2>&1; then
-    echo ""
-    echo "⚠️  權限不足。可執行以下命令自動修復:"
-    echo "  $AUDIT_SCRIPT --target \"$TARGET_DIR\" --fix"
-    echo ""
-    exit 1
-  fi
-  echo ""
-fi
+# 註:先前這裡會呼叫 gsd-permission-audit.sh 檢查 opencode.json 跨目錄白名單。
+# 現在派工一律 cd 進 TARGET_DIR 執行(見下方 opencode run),TARGET_DIR 底下
+# 的檔案對士兵來說就是 cwd 內的檔案,不再需要外部目錄白名單,故跳過此檢查。
 
 # ---- 派工前快照(供軍師事後比對) ----
 GIT_BEFORE="$(git -C "$TARGET_DIR" rev-parse HEAD 2>/dev/null || echo 'no-git')"
@@ -179,13 +219,18 @@ echo "  士兵執行中…(完整過程寫入 log,可另開終端 tail -f 觀看
 echo "════════════════════════════════════════════════════════"
 echo ""
 
-# ---- 派工:士兵執行 gsd-research-phase 或 gsd-execute-phase ----
+# ---- 派工:士兵執行 prompts/<mode>.md 組出的自包含 prompt ----
 # default 格式(人類可讀)+ tee 落地;軍師不讀這個流,只讀下方 SUMMARY+diff
-# ⚠️ DO NOT cd to $TARGET_DIR. cwd must stay at $PROJECT_DIR (vault)
-# for .opencode/opencode.json whitelist to apply.
+# 一律 cd 進 TARGET_DIR 再執行(prompt 範本用的是相對路徑),這樣士兵讀寫的
+# 就是專案內的真實檔案,不需要 opencode.json 的跨目錄白名單,也不依賴
+# --command 解析(該機制在 TARGET_DIR 沒有 .opencode/command 時常常失敗)。
+
+PHASE_SECTION="$(extract_phase_section)"
+TODAY="$(date +%Y-%m-%d)"
+FULL_PROMPT="$(build_prompt "$PROMPT_TEMPLATE" "$PHASE" "$TARGET_DIR" "$TODAY" "$PHASE_SECTION")"
 
 echo "士兵執行中…(完整過程寫入 log,可另開終端 tail -f 觀看)"
-echo "  MODE: $MODE → $GSD_COMMAND"
+echo "  MODE: $MODE → $GSD_COMMAND  (prompt: ${PROMPT_TEMPLATE#$PROJECT_DIR/})"
 if [[ -n "$SERVER_URL" ]]; then
   echo "  Session 監看: curl -s http://localhost:4096/session | jq '.[] | .title'"
 fi
@@ -198,23 +243,15 @@ if [[ -n "$SERVER_URL" ]]; then
   SESSIONS_BEFORE=$(curl -s --max-time 5 "$SERVER_URL/session" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
 fi
 
-# Workaround: opencode v1.17.5 bug — --command + --dir 組合會崩潰。
-# 若 TARGET_DIR != PROJECT_DIR(跨專案），把 --dir 移到 prompt 指示中。
 # Timeout: 3600s(1 小時)避免伺服器無回應導致腳本永不返回，逾時回傳 exit code 124
-if [[ "$TARGET_DIR" == "$PROJECT_DIR" ]]; then
-  run_with_timeout 3600 opencode run \
-    --command "$GSD_COMMAND" \
-    -m "$MODEL" \
-    ${VARIANT:+--variant "$VARIANT"} \
-    ${SERVER_URL:+--attach "$SERVER_URL"} \
-    "$PHASE" 2>&1 | tee "$LOG_FILE"
-else
+(
+  cd "$TARGET_DIR"
   run_with_timeout 3600 opencode run \
     -m "$MODEL" \
     ${VARIANT:+--variant "$VARIANT"} \
     ${SERVER_URL:+--attach "$SERVER_URL"} \
-    "Run the /$GSD_COMMAND command for phase $PHASE. IMPORTANT: The target project directory is $TARGET_DIR — all file reads, writes, and git operations must target that directory, not the current working directory." 2>&1 | tee "$LOG_FILE"
-fi
+    "$FULL_PROMPT"
+) 2>&1 | tee "$LOG_FILE"
 
 echo ""
 echo "════════════════════════════════════════════════════════"
@@ -287,6 +324,22 @@ if [[ "$MODE" == "plan" ]]; then
   else
     echo "（未找到 Phase ${PHASE} 的 PLAN.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
   fi
+elif [[ "$MODE" == "check" ]]; then
+  echo "── 士兵產出的 PLAN-CHECK.md(軍師讀結論)─────────────────"
+  CHECK_FILES="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" -name '*-PLAN-CHECK.md' 2>/dev/null | sort)"
+  if [[ -n "$CHECK_FILES" ]]; then
+    echo "$CHECK_FILES" | sed "s#^#找到: #; s#${PROJECT_DIR}/##"
+  else
+    echo "（未找到 Phase ${PHASE} 的 PLAN-CHECK.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
+  fi
+elif [[ "$MODE" == "revise" ]]; then
+  echo "── 修訂後的 PLAN.md(軍師看 git diff 確認修法)────────────"
+  PLAN_FILES="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" -name '*-PLAN.md' 2>/dev/null | sort)"
+  if [[ -n "$PLAN_FILES" ]]; then
+    echo "$PLAN_FILES" | sed "s#^#找到: #; s#${PROJECT_DIR}/##"
+  else
+    echo "（未找到 Phase ${PHASE} 的 PLAN.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
+  fi
 else
   echo "── 士兵產出的 SUMMARY.md(軍師讀結論)────────────────────"
   SUMMARY="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" -name 'SUMMARY.md' 2>/dev/null | head -1)"
@@ -304,11 +357,20 @@ echo "  下一步(軍師):"
 if [[ "$MODE" == "plan" ]]; then
   echo "    1. 讀上面的 PLAN.md + git log 確認 requirements 覆蓋完整"
   echo "    2. 有疑慮才深入看 log 或特定檔案"
-  echo "    3. 滿意 → gsd-plan-checker 驗證,再 /gsd:execute-phase ${PHASE}"
+  echo "    3. 滿意 → MODE=check $0 ${PHASE} 驗證,再 /gsd:execute-phase ${PHASE}"
 elif [[ "$MODE" == "research" ]]; then
   echo "    1. 讀上面產出的 RESEARCH.md + git log"
   echo "    2. 有疑慮才深入看 log 或特定檔案"
   echo "    3. 滿意 → MODE=plan $0 ${PHASE}"
+elif [[ "$MODE" == "check" ]]; then
+  echo "    1. 讀上面的 PLAN-CHECK.md,看有沒有 blocker"
+  echo "    2. 0 blocker → 直接執行;有 warning → 視情況先修 PLAN.md 再執行"
+  echo "    3. 有 blocker → MODE=revise $0 ${PHASE} 自動修訂,再 MODE=check 重新驗證"
+  echo "    4. 滿意 → $0 ${PHASE}(execute mode)"
+elif [[ "$MODE" == "revise" ]]; then
+  echo "    1. 讀 git diff 確認 PLAN.md 的修法符合 PLAN-CHECK.md 的 fix_hint"
+  echo "    2. 有疑慮才深入看 log 或特定檔案"
+  echo "    3. 滿意 → MODE=check $0 ${PHASE} 重新驗證,確認 blocker 歸零"
 else
   echo "    1. 讀上面的 SUMMARY.md + git diff 驗收"
   echo "    2. 有疑慮才深入看 log 或特定檔案"
