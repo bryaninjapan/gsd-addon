@@ -67,7 +67,12 @@ run_with_timeout() {
     exit_code=$?
     [[ "$exit_code" -eq 143 ]] && exit_code=124
   fi
-  kill -TERM "$watcher_pid" 2>/dev/null
+  # Kill watcher's process group to reduce PID-reuse race window (WR-05):
+  # if cmd exited naturally and its PID was reused before we reach this line,
+  # killing the watcher's process group (sleep + kill subshell) avoids sending
+  # SIGTERM to a recycled PID. Note: does not fully eliminate the race, but
+  # substantially reduces the window.
+  kill -TERM "-$watcher_pid" 2>/dev/null
   wait "$watcher_pid" 2>/dev/null
   return "$exit_code"
 }
