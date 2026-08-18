@@ -1,0 +1,169 @@
+#!/bin/bash
+#
+# GSD Global Framework 安裝腳本
+# 將 dispatch.sh 和 gsd-test framework 安裝到全局位置
+# 讓所有項目都能使用
+#
+
+set -e
+
+# 顏色
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
+BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
+
+echo -e "${BLUE}🚀 Installing GSD Addon Framework${NC}"
+echo "   Addon Home: $GSD_ADDON_HOME"
+echo "   Bin Dir:     $BIN_DIR"
+echo ""
+
+# 創建目錄
+mkdir -p "$GSD_ADDON_HOME"
+mkdir -p "$BIN_DIR"
+
+# ==================== 安裝 dispatch 框架 ====================
+
+echo -e "${BLUE}📦 Installing dispatch framework...${NC}"
+
+if [ -d "dispatch" ]; then
+    mkdir -p "$GSD_ADDON_HOME/dispatch"
+    cp -r dispatch/* "$GSD_ADDON_HOME/dispatch/" 2>/dev/null || true
+    echo -e "${GREEN}✓ dispatch framework installed${NC}"
+else
+    echo -e "${YELLOW}⚠ dispatch directory not found (optional)${NC}"
+fi
+
+# ==================== 安裝 gsd-test 框架 ====================
+
+echo -e "${BLUE}📦 Installing gsd-test framework...${NC}"
+
+if [ -d "gsd-test/.gsd-test" ]; then
+    mkdir -p "$GSD_ADDON_HOME/gsd-test"
+    cp -r gsd-test/.gsd-test/* "$GSD_ADDON_HOME/gsd-test/"
+    chmod +x "$GSD_ADDON_HOME/gsd-test/cli.py"
+    echo -e "${GREEN}✓ gsd-test framework installed${NC}"
+else
+    echo -e "${RED}✗ gsd-test/.gsd-test directory not found${NC}"
+    exit 1
+fi
+
+# ==================== 創建全局命令 ====================
+
+echo -e "${BLUE}📦 Creating global commands...${NC}"
+
+# gsd-dispatch 命令
+cat > "$BIN_DIR/gsd-dispatch" << 'EOF'
+#!/bin/bash
+# Global GSD Dispatch command
+#
+# Usage: gsd-dispatch <phase> [env]
+#
+# Routes to: gsd-framework dispatch system
+#
+
+export GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
+export GSD_GLOBAL_HOME="${GSD_GLOBAL_HOME:-$HOME/.claude/gsd-framework}"
+
+# 加載 addon 配置
+if [ -f "$GSD_ADDON_HOME/gsd-config.sh" ]; then
+    source "$GSD_ADDON_HOME/gsd-config.sh"
+    if declare -f gsd_load_config > /dev/null; then
+        gsd_load_config
+    fi
+fi
+
+# 查找 dispatch 可執行檔
+if [ -f "$GSD_ADDON_HOME/dispatch/dispatch.sh" ]; then
+    exec "$GSD_ADDON_HOME/dispatch/dispatch.sh" "$@"
+elif command -v opencode &> /dev/null; then
+    # 委託給 gsd-framework 的 dispatch
+    exec opencode gsd dispatch "$@"
+else
+    echo "❌ dispatch.sh not found and opencode not available" >&2
+    exit 1
+fi
+EOF
+chmod +x "$BIN_DIR/gsd-dispatch"
+echo -e "${GREEN}✓ gsd-dispatch command installed${NC}"
+
+# gsd-test 命令
+cat > "$BIN_DIR/gsd-test" << 'EOF'
+#!/bin/bash
+# Global GSD Test command (Test Orchestration Framework)
+#
+# Usage: gsd-test --workflow <workflow.yml> [--env <env>] [--output <file>]
+#
+
+export GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
+
+# 加載 addon 配置
+if [ -f "$GSD_ADDON_HOME/gsd-config.sh" ]; then
+    source "$GSD_ADDON_HOME/gsd-config.sh"
+fi
+
+# 運行 test orchestrator
+python3 "$GSD_ADDON_HOME/gsd-test/cli.py" "$@"
+EOF
+chmod +x "$BIN_DIR/gsd-test"
+echo -e "${GREEN}✓ gsd-test command installed${NC}"
+
+# gsd-addon-config 命令（避免與 gsd-framework 的 gsd-config 衝突）
+cat > "$BIN_DIR/gsd-addon-config" << 'EOF'
+#!/bin/bash
+# GSD Addon Configuration command
+
+export GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
+
+exec "$GSD_ADDON_HOME/gsd-config.sh" "$@"
+EOF
+chmod +x "$BIN_DIR/gsd-addon-config"
+echo -e "${GREEN}✓ gsd-addon-config command installed${NC}"
+
+# ==================== 更新 PATH ====================
+
+echo -e "${BLUE}📝 Updating PATH...${NC}"
+
+if [[ ":$PATH:" == *":$BIN_DIR:"* ]]; then
+    echo -e "${GREEN}✓ $BIN_DIR already in PATH${NC}"
+else
+    echo ""
+    echo -e "${YELLOW}⚠ Add this to your ~/.bashrc or ~/.zshrc:${NC}"
+    echo ""
+    echo "  export PATH=\"\$PATH:$BIN_DIR\""
+    echo ""
+    echo -e "${YELLOW}Then run: source ~/.bashrc (or ~/.zshrc)${NC}"
+fi
+
+# ==================== 驗證安裝 ====================
+
+echo -e "${BLUE}🔍 Verifying installation...${NC}"
+
+source "$GSD_ADDON_HOME/gsd-config.sh"
+if declare -f gsd_verify_setup > /dev/null; then
+    gsd_verify_setup
+fi
+
+# ==================== 完成 ====================
+
+echo ""
+echo -e "${GREEN}✅ GSD Addon Framework installed successfully!${NC}"
+echo ""
+echo -e "${BLUE}Next steps:${NC}"
+echo "  1. Add to PATH: export PATH=\"\$PATH:$BIN_DIR\""
+echo "  2. Run tests: gsd-test --workflow booking-e2e.workflow.yml"
+echo ""
+echo -e "${BLUE}Available commands:${NC}"
+echo "  gsd-test --workflow <name>           # Run test workflow"
+echo "  gsd-test --workflow <name> --env <env>  # Specify environment"
+echo "  gsd-dispatch <phase> <env>           # Run GSD phase dispatch"
+echo "  gsd-addon-config show                # Show addon configuration"
+echo ""
+echo -e "${YELLOW}ℹ️  Note:${NC}"
+echo "  - GSD Addon test framework works alongside gsd-framework"
+echo "  - Use 'gsd-addon-config' to manage addon-specific config"
+echo "  - Use 'gsd-config' (from gsd-framework) for main GSD config"
+echo ""

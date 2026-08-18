@@ -1,0 +1,182 @@
+# 預約流程端到端測試 (E2E)
+# 完整流程: 啟動環境 → API 驗證 → UI 測試 → 驗證成功
+
+name: "Booking Form Complete E2E Test"
+description: "Complete booking flow with error recovery and validation"
+
+env:
+  DEV_COMMAND: "npm run dev:api"
+  PORT: 8788
+  TIMEOUT: 30
+  BASE_URL: "http://localhost:{{ environment.port }}"
+
+variables:
+  test_name: "Test User"
+  test_phone: "+60 12345678"
+  test_date: "2026-08-20T14:00"
+  test_service_id: "tuning-60"
+
+jobs:
+  # Job 1: 環境設置
+  setup:
+    name: Setup Test Environment
+    steps:
+      - name: Update launch configuration
+        tool: file_write
+        params:
+          path: ".claude/launch.json"
+          content: |
+            {
+              "version": "0.0.1",
+              "configurations": [{
+                "name": "dev",
+                "runtimeExecutable": "npm",
+                "runtimeArgs": ["run", "dev:api"],
+                "port": 8788
+              }]
+            }
+
+      - name: Start development server
+        id: start_server
+        tool: preview_start
+        params:
+          name: dev
+          command: "${{ env.DEV_COMMAND }}"
+        timeout: 15s
+        on_failure: retry
+        retry_count: 2
+
+      - name: Wait for server ready
+        tool: wait
+        params:
+          duration: 3
+
+  # Job 2: API 驗證
+  verify_api:
+    name: Verify API Endpoints
+    needs: [setup]
+    if: "always"
+
+    steps:
+      - name: Check /api/services endpoint
+        id: services_response
+        tool: bash
+        params:
+          command: |
+            curl -s http://localhost:${{ environment.port }}/api/services \
+              | head -c 200
+        timeout: 10s
+
+      - name: Verify services list
+        tool: assert
+        params:
+          actual: "${{ outputs.services_response.output.stdout }}"
+          assertions:
+            contains: "tuning-60"
+
+      - name: Check /api/settings endpoint
+        id: settings_response
+        tool: bash
+        params:
+          command: |
+            curl -s http://localhost:${{ environment.port }}/api/settings
+        timeout: 10s
+
+  # Job 3: 表單填寫測試
+  test_form:
+    name: Test Booking Form UI
+    needs: [setup, verify_api]
+
+    steps:
+      - name: Read page content
+        id: page_content
+        tool: read_page
+        params:
+          tabId: "seed"
+
+      - name: Fill name field
+        tool: form_input
+        params:
+          ref: "ref_121"
+          value: "${{ variables.test_name }}"
+
+      - name: Fill phone field
+        tool: form_input
+        params:
+          ref: "ref_123"
+          value: "${{ variables.test_phone }}"
+
+      - name: Fill datetime field
+        tool: form_input
+        params:
+          ref: "ref_131"
+          value: "${{ variables.test_date }}"
+
+      - name: Submit booking form
+        tool: computer
+        params:
+          action: "left_click"
+          ref: "ref_147"
+        timeout: 10s
+
+      - name: Wait for response
+        tool: wait
+        params:
+          duration: 2
+
+  # Job 4: 成功驗證
+  verify_success:
+    name: Verify Booking Success
+    needs: [test_form]
+
+    steps:
+      - name: Read success page
+        id: success_page
+        tool: read_page
+        params:
+          tabId: "seed"
+
+      - name: Assert success message
+        tool: assert
+        params:
+          actual: "${{ outputs.success_page.output.page_structure }}"
+          assertions:
+            contains: "预约讯息已成功产生"
+
+      - name: Assert confirmation code
+        tool: assert
+        params:
+          actual: "${{ outputs.success_page.output.page_structure }}"
+          assertions:
+            contains: "CODE:"
+
+      - name: Assert QR code
+        tool: assert
+        params:
+          actual: "${{ outputs.success_page.output.page_structure }}"
+          assertions:
+            contains: "QR CODE"
+
+      - name: Assert WhatsApp button
+        tool: assert
+        params:
+          actual: "${{ outputs.success_page.output.page_structure }}"
+          assertions:
+            contains: "WhatsApp"
+
+  # Job 5: 清理
+  cleanup:
+    name: Cleanup
+    needs: [verify_success]
+    if: "always"
+
+    steps:
+      - name: Stop development server
+        tool: preview_stop
+        params:
+          serverId: "${{ outputs.start_server.outputs.serverId }}"
+
+# 測試完成時通知
+on_complete:
+  - name: print_summary
+    message: "✓ Booking E2E test completed successfully"

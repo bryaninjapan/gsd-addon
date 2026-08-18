@@ -1,0 +1,37 @@
+# Development
+.env
+.env.local
+*.log
+*.swp
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+venv/
+
+# Test outputs
+test-results.json
+test-results-*.json
+results.json
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Temporary
+*.tmp
+/tmp/
+.temp/
+
+# But keep templates and examples
+!examples/
+!

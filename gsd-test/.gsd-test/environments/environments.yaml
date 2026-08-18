@@ -1,0 +1,72 @@
+# 環境配置 — 支持多環境自動適配
+
+environments:
+  local:
+    name: "Local Development"
+    dev_command: "npm run dev:api"
+    port: 8788
+    base_url: "http://localhost:8788"
+    db_type: "d1_local"
+    db_path: ".wrangler/state"
+    timeout: 30
+    headless: false
+    screenshot_on_failure: true
+
+  docker:
+    name: "Docker Compose"
+    dev_command: "docker-compose up"
+    port: 3000
+    base_url: "http://localhost:3000"
+    db_type: "postgres"
+    db_host: "localhost"
+    db_port: 5432
+    db_name: "booking_test"
+    timeout: 60
+    headless: true
+    screenshot_on_failure: true
+
+  staging:
+    name: "Staging Environment"
+    dev_command: null  # 已部署，無需啟動
+    port: 443
+    base_url: "https://staging.soapwavehealing.com"
+    db_type: "cloudflare_d1"
+    db_binding: "DB_STAGING"
+    timeout: 45
+    headless: true
+    screenshot_on_failure: true
+    requires_auth: true
+    auth_method: "token"  # 或 "login_form"
+
+  production:
+    name: "Production Environment"
+    dev_command: null
+    port: 443
+    base_url: "https://soapwavehealing.com"
+    db_type: "cloudflare_d1_prod"
+    db_binding: "DB_PROD"
+    timeout: 45
+    headless: true
+    screenshot_on_failure: false  # 生產環境不截圖
+    readonly: true  # 禁止寫操作（只允許 GET）
+    requires_auth: true
+    auth_method: "token"
+
+# 預設環境（如果未指定）
+default: "local"
+
+# 環境變數對應表
+env_vars:
+  local:
+    NODE_ENV: "development"
+    LOG_LEVEL: "debug"
+
+  staging:
+    NODE_ENV: "staging"
+    LOG_LEVEL: "info"
+    AUTH_TOKEN: "${STAGING_AUTH_TOKEN}"
+
+  production:
+    NODE_ENV: "production"
+    LOG_LEVEL: "warn"
+    AUTH_TOKEN: "${PROD_AUTH_TOKEN}"
