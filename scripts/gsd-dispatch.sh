@@ -194,7 +194,8 @@ echo ""
 # 記錄派工前的 session 數(用於 liveness 檢查)
 SESSIONS_BEFORE=0
 if [[ -n "$SERVER_URL" ]]; then
-  SESSIONS_BEFORE=$(curl -s "$SERVER_URL/session" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
+  # --max-time 5: 避免 SERVER_URL 無回應導致腳本卡住；失敗時降級為 0
+  SESSIONS_BEFORE=$(curl -s --max-time 5 "$SERVER_URL/session" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
 fi
 
 # Workaround: opencode v1.17.5 bug — --command + --dir 組合會崩潰。
@@ -232,7 +233,8 @@ fi
 
 # ---- Liveness 檢查 2:server session 數(若有 attach) ----
 if [[ -n "$SERVER_URL" ]]; then
-  SESSIONS_AFTER=$(curl -s "$SERVER_URL/session" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
+  # --max-time 5: 避免 SERVER_URL 無回應導致腳本卡住；失敗時降級為 0
+  SESSIONS_AFTER=$(curl -s --max-time 5 "$SERVER_URL/session" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
   if [[ $SESSIONS_AFTER -gt $SESSIONS_BEFORE ]]; then
     SESSION_DIFF=$((SESSIONS_AFTER - SESSIONS_BEFORE))
     echo "✓ server session: $SESSIONS_BEFORE → $SESSIONS_AFTER (+$SESSION_DIFF)"
