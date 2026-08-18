@@ -76,6 +76,13 @@ run_with_timeout() {
 PHASE="${1:-}"
 MODEL="${2:-${MODEL:-opencode-go/deepseek-v4-flash}}"
 VARIANT="${VARIANT:-high}"
+case "$VARIANT" in
+  high|max|minimal) ;;
+  *)
+    echo "✗ VARIANT 必須是 high、max 或 minimal,得到: $VARIANT"
+    exit 1
+    ;;
+esac
 MODE="${MODE:-execute}"  # research | plan | execute
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # 跨專案派工:被執行 phase 的目標專案(預設=派工方自己=vault)
