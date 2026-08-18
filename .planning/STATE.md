@@ -31,10 +31,11 @@ Next: Phase 05 — Integration & Testing
 | Plan | Status |
 |------|--------|
 | 03 | ✅ Complete (2026-08-19) |
-| 04 | ✅ Complete (2026-08-19) |
+| 04 | ✅ Complete + UAT passed (2026-08-19) |
 
 ## Session Log
 
 - 2026-08-18: Phase 02 complete (timeout hardening)
 - 2026-08-19: Phase 03 complete (source/install drift fixed, prompts backported)
 - 2026-08-19: Phase 04 complete (retry wrapper + RETRY routing + install.sh/gsd-config.sh fixes)
+- 2026-08-19: Phase 04 UAT passed (5/5 tests: install, routing x2, syntax, exit code)
