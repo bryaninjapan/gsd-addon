@@ -50,9 +50,9 @@ LOG_FILE="${LOG_DIR}/phase-${PHASE}-$(date +%Y%m%d-%H%M%S).log"
 
 # 選擇指令
 case "$MODE" in
-  research)  GSD_COMMAND="gsd-research-phase" ;;
-  plan)      GSD_COMMAND="gsd-plan-phase" ;;
-  execute)   GSD_COMMAND="gsd-execute-phase" ;;
+  research)  GSD_COMMAND="gsd-phase-researcher" ;;
+  plan)      GSD_COMMAND="gsd-planner" ;;
+  execute)   GSD_COMMAND="gsd-executor" ;;
   *)
     echo "✗ MODE 必須是 research、plan 或 execute,得到: $MODE"
     exit 1
