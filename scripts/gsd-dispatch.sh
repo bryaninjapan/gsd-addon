@@ -35,6 +35,30 @@
 #
 set -euo pipefail
 
+# ---- 純 bash 逾時保護 helper ----
+# 用法: run_with_timeout <秒數> <command...>
+# 背景執行命令 + watcher 計時器,逾時以 SIGTERM 終止命令,
+# 回傳 exit code 124(與 GNU timeout 慣例一致)。
+# 不依賴外部 timeout/gtimeout(macOS 預設沒有),任何 bash 3.2+ 環境皆可跑。
+run_with_timeout() {
+  local secs="$1"; shift
+  "$@" &
+  local cmd_pid=$!
+  ( sleep "$secs" && kill -TERM "$cmd_pid" 2>/dev/null ) &
+  local watcher_pid=$!
+  local exit_code=0
+  if wait "$cmd_pid" 2>/dev/null; then
+    exit_code=0
+  else
+    # wait 回傳 128+15=143(SIGTERM)代表被逾時終止,統一映射成 124
+    exit_code=$?
+    [[ "$exit_code" -eq 143 ]] && exit_code=124
+  fi
+  kill -TERM "$watcher_pid" 2>/dev/null
+  wait "$watcher_pid" 2>/dev/null
+  return "$exit_code"
+}
+
 # ---- 參數 ----
 PHASE="${1:-}"
 MODEL="${2:-${MODEL:-opencode-go/deepseek-v4-flash}}"
@@ -175,15 +199,16 @@ fi
 
 # Workaround: opencode v1.17.5 bug — --command + --dir 組合會崩潰。
 # 若 TARGET_DIR != PROJECT_DIR(跨專案），把 --dir 移到 prompt 指示中。
+# Timeout: 3600s(1 小時)避免伺服器無回應導致腳本永不返回，逾時回傳 exit code 124
 if [[ "$TARGET_DIR" == "$PROJECT_DIR" ]]; then
-  opencode run \
+  run_with_timeout 3600 opencode run \
     --command "$GSD_COMMAND" \
     -m "$MODEL" \
     ${VARIANT:+--variant "$VARIANT"} \
     ${SERVER_URL:+--attach "$SERVER_URL"} \
     "$PHASE" 2>&1 | tee "$LOG_FILE"
 else
-  opencode run \
+  run_with_timeout 3600 opencode run \
     -m "$MODEL" \
     ${VARIANT:+--variant "$VARIANT"} \
     ${SERVER_URL:+--attach "$SERVER_URL"} \
