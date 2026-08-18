@@ -100,13 +100,15 @@ PROMPTS_DIR="${PROJECT_DIR}/prompts"
 
 # 選擇指令(GSD_COMMAND 僅供顯示/log 用,實際派工一律用 prompts/<mode>.md 範本)
 case "$MODE" in
-  research)  GSD_COMMAND="gsd-phase-researcher" ;;
-  plan)      GSD_COMMAND="gsd-planner" ;;
-  check)     GSD_COMMAND="gsd-plan-checker" ;;
-  revise)    GSD_COMMAND="gsd-planner (revision)" ;;
-  execute)   GSD_COMMAND="gsd-executor" ;;
+  research)     GSD_COMMAND="gsd-phase-researcher" ;;
+  plan)         GSD_COMMAND="gsd-planner" ;;
+  check)        GSD_COMMAND="gsd-plan-checker" ;;
+  revise)       GSD_COMMAND="gsd-planner (revision)" ;;
+  execute)      GSD_COMMAND="gsd-executor" ;;
+  code-review)  GSD_COMMAND="gsd-code-reviewer" ;;
+  verify)       GSD_COMMAND="gsd-verifier" ;;
   *)
-    echo "✗ MODE 必須是 research、plan、check、revise 或 execute,得到: $MODE"
+    echo "✗ MODE 必須是 research、plan、check、revise、execute、code-review 或 verify,得到: $MODE"
     exit 1
     ;;
 esac
@@ -125,6 +127,8 @@ show_usage() {
   echo "      MODE=plan $0 2                (plan mode)"
   echo "      MODE=check $0 2               (check mode — 驗證已存在的 PLAN.md)"
   echo "      MODE=revise $0 2              (revise mode — 依 PLAN-CHECK.md 修訂 PLAN.md)"
+  echo "      MODE=code-review $0 2         (code-review mode — 審查已執行 phase 的 commit,產出 REVIEW.md)"
+  echo "      MODE=verify $0 2              (verify mode — goal-backward 驗證 success criteria,產出 VERIFICATION.md)"
   echo "      $0 6.3 opencode/kimi-k2.6"
   echo "      SERVER_URL=http://localhost:4096 TARGET_DIR=/etf $0 8"
   echo "      RETRY=true gsd-dispatch 4     (啟用重試 wrapper:最多 3 次,指數退避)"
@@ -354,6 +358,22 @@ elif [[ "$MODE" == "research" ]]; then
   else
     echo "（未找到 Phase ${PHASE} 的 RESEARCH.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
   fi
+elif [[ "$MODE" == "code-review" ]]; then
+  echo "── 士兵產出的 REVIEW.md(軍師讀結論)──────────────────────"
+  REVIEW_FILES="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" -name '*-REVIEW.md' 2>/dev/null | sort)"
+  if [[ -n "$REVIEW_FILES" ]]; then
+    echo "$REVIEW_FILES" | sed "s#^#找到: #; s#${PROJECT_DIR}/##"
+  else
+    echo "（未找到 Phase ${PHASE} 的 REVIEW.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
+  fi
+elif [[ "$MODE" == "verify" ]]; then
+  echo "── 士兵產出的 VERIFICATION.md(軍師讀結論)────────────────"
+  VERIFY_FILES="$(find "${TARGET_DIR}/.planning/phases" -path "*${PHASE}*" \( -name '*-VERIFICATION.md' -o -name 'VERIFICATION.md' \) 2>/dev/null | sort)"
+  if [[ -n "$VERIFY_FILES" ]]; then
+    echo "$VERIFY_FILES" | sed "s#^#找到: #; s#${PROJECT_DIR}/##"
+  else
+    echo "（未找到 Phase ${PHASE} 的 VERIFICATION.md,請查 log: ${LOG_FILE#$PROJECT_DIR/}）"
+  fi
 else
   # execute mode
   echo "── 士兵產出的 SUMMARY.md(軍師讀結論)────────────────────"
@@ -386,6 +406,14 @@ elif [[ "$MODE" == "revise" ]]; then
   echo "    1. 讀 git diff 確認 PLAN.md 的修法符合 PLAN-CHECK.md 的 fix_hint"
   echo "    2. 有疑慮才深入看 log 或特定檔案"
   echo "    3. 滿意 → MODE=check $0 ${PHASE} 重新驗證,確認 blocker 歸零"
+elif [[ "$MODE" == "code-review" ]]; then
+  echo "    1. 讀上面的 REVIEW.md,看有沒有 CRITICAL/HIGH"
+  echo "    2. 0 CRITICAL/HIGH → 可以 merge;有的話先修再重跑 code-review"
+  echo "    3. 滿意 → MODE=verify $0 ${PHASE} 做最終 goal-backward 驗證"
+elif [[ "$MODE" == "verify" ]]; then
+  echo "    1. 讀上面的 VERIFICATION.md,看每條 success criterion 的 verdict"
+  echo "    2. 全部 PASS → phase 完成,可以 commit+push、進下一個 phase"
+  echo "    3. 有 FAIL → 依報告裡的 Recommendation 修復,再重跑 MODE=verify"
 else
   echo "    1. 讀上面的 SUMMARY.md + git diff 驗收"
   echo "    2. 有疑慮才深入看 log 或特定檔案"
