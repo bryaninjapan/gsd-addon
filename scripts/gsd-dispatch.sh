@@ -253,7 +253,8 @@ echo "════════════════════════�
 # ---- 軍師驗收材料 1:git diff 摘要 ----
 echo ""
 echo "── git diff --stat(軍師看改了什麼)──────────────────────"
-git -C "$TARGET_DIR" diff --stat "${GIT_BEFORE}" HEAD 2>/dev/null || git -C "$TARGET_DIR" diff --stat
+# --ignore-all-space 加速大型 diff；失敗時顯示降級訊息而非卡住
+git -C "$TARGET_DIR" diff --stat --ignore-all-space "${GIT_BEFORE}" HEAD 2>/dev/null || echo "（git diff 逾時或失敗）"
 echo ""
 echo "── 新增的提交 ───────────────────────────────────────────"
 git -C "$TARGET_DIR" log --oneline "${GIT_BEFORE}..HEAD" 2>/dev/null || echo "（無新提交,或士兵未自動 commit）"
