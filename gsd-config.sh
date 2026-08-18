@@ -23,12 +23,10 @@ NC='\033[0m'
 # ==================== 配置加載函數 ====================
 
 gsd_load_config() {
-    """
-    加載配置，優先級:
-    1. 項目級別 .gsd-test.config
-    2. 全局 ~/.claude/gsd-addon/gsd-config.yaml
-    3. 默認值
-    """
+    # 加載配置，優先級:
+    # 1. 項目級別 .gsd-test.config
+    # 2. 全局 ~/.claude/gsd-addon/gsd-config.yaml
+    # 3. 默認值
 
     local project_config="${GSD_PROJECT_HOME}/.gsd-test.config"
     local global_config="${GSD_GLOBAL_HOME}/gsd-config.yaml"
@@ -56,12 +54,10 @@ gsd_load_config() {
 # ==================== 路徑解析函數 ====================
 
 gsd_get_workflow_path() {
-    """
-    獲取 workflow 路徑（支持項目級別 override）
-    優先級：
-    1. 項目: .gsd-test/workflows/xxx.workflow.yml
-    2. 全局: ~/.claude/gsd-addon/gsd-test/workflows/xxx.workflow.yml
-    """
+    # 獲取 workflow 路徑（支持項目級別 override）
+    # 優先級：
+    # 1. 項目: .gsd-test/workflows/xxx.workflow.yml
+    # 2. 全局: ~/.claude/gsd-addon/gsd-test/workflows/xxx.workflow.yml
 
     local workflow_name="$1"
     local project_workflow="${GSD_PROJECT_HOME}/.gsd-test/workflows/${workflow_name}.workflow.yml"
@@ -78,12 +74,10 @@ gsd_get_workflow_path() {
 }
 
 gsd_get_environments_path() {
-    """
-    獲取環境配置路徑
-    優先級：
-    1. 項目: .gsd-test/environments/environments.yaml
-    2. 全局: ~/.claude/gsd-addon/gsd-test/environments/environments.yaml
-    """
+    # 獲取環境配置路徑
+    # 優先級：
+    # 1. 項目: .gsd-test/environments/environments.yaml
+    # 2. 全局: ~/.claude/gsd-addon/gsd-test/environments/environments.yaml
 
     local project_envs="${GSD_PROJECT_HOME}/.gsd-test/environments/environments.yaml"
     local global_envs="${GSD_GLOBAL_HOME}/gsd-test/environments/environments.yaml"
@@ -98,18 +92,14 @@ gsd_get_environments_path() {
 }
 
 gsd_get_cli_path() {
-    """
-    獲取 CLI 工具路徑
-    """
+    # 獲取 CLI 工具路徑
     echo "${GSD_GLOBAL_HOME}/gsd-test/cli.py"
 }
 
 # ==================== 驗證函數 ====================
 
 gsd_verify_setup() {
-    """
-    驗證 GSD 框架是否正確安裝
-    """
+    # 驗證 GSD 框架是否正確安裝
 
     echo -e "${BLUE}🔍 Verifying GSD Addon setup...${NC}"
 
@@ -123,12 +113,12 @@ gsd_verify_setup() {
         echo -e "${GREEN}✓ Global framework: $GSD_GLOBAL_HOME${NC}"
     fi
 
-    # 檢查 dispatch.sh
-    if [ ! -f "$GSD_GLOBAL_HOME/dispatch/dispatch.sh" ]; then
-        echo -e "${RED}✗ dispatch.sh not found${NC}"
+    # 檢查 dispatch 腳本（addon 的派工入口是 scripts/gsd-dispatch.sh）
+    if [ ! -f "$GSD_GLOBAL_HOME/scripts/gsd-dispatch.sh" ]; then
+        echo -e "${RED}✗ gsd-dispatch.sh not found${NC}"
         ((errors++))
     else
-        echo -e "${GREEN}✓ dispatch.sh found${NC}"
+        echo -e "${GREEN}✓ gsd-dispatch.sh found${NC}"
     fi
 
     # 檢查 test framework
@@ -166,9 +156,7 @@ gsd_verify_setup() {
 # ==================== 顯示配置 ====================
 
 gsd_show_config() {
-    """
-    顯示當前配置
-    """
+    # 顯示當前配置
 
     gsd_load_config
 
@@ -195,9 +183,7 @@ gsd_show_config() {
 # ==================== 初始化項目 ====================
 
 gsd_init_project() {
-    """
-    初始化當前項目以使用全局 GSD 框架
-    """
+    # 初始化當前項目以使用全局 GSD 框架
 
     local project_dir="${GSD_PROJECT_HOME}"
 

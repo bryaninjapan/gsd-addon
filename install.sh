@@ -78,6 +78,17 @@ else
     exit 1
 fi
 
+# ==================== 安裝 gsd-config.sh ====================
+
+echo -e "${BLUE}📦 Installing gsd-config.sh...${NC}"
+
+if [ -f "gsd-config.sh" ]; then
+    cp gsd-config.sh "$GSD_ADDON_HOME/gsd-config.sh"
+    echo -e "${GREEN}✓ gsd-config.sh installed${NC}"
+else
+    echo -e "${YELLOW}⚠ gsd-config.sh not found (optional)${NC}"
+fi
+
 # ==================== 創建全局命令 ====================
 
 echo -e "${BLUE}📦 Creating global commands...${NC}"
@@ -88,6 +99,7 @@ cat > "$BIN_DIR/gsd-dispatch" << 'EOF'
 # Global GSD Dispatch command
 #
 # Usage: gsd-dispatch <phase> [env]
+#        RETRY=true gsd-dispatch <phase> [env]   # 啟用重試 wrapper
 #
 # Routes to: gsd-framework dispatch system
 #
@@ -95,21 +107,29 @@ cat > "$BIN_DIR/gsd-dispatch" << 'EOF'
 export GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
 export GSD_GLOBAL_HOME="${GSD_GLOBAL_HOME:-$HOME/.claude/gsd-framework}"
 
-# 加載 addon 配置
+# 加載 addon 配置（用 load 避免觸發 gsd-config.sh 的 usage 輸出）
 if [ -f "$GSD_ADDON_HOME/gsd-config.sh" ]; then
-    source "$GSD_ADDON_HOME/gsd-config.sh"
-    if declare -f gsd_load_config > /dev/null; then
-        gsd_load_config
-    fi
+    source "$GSD_ADDON_HOME/gsd-config.sh" load
 fi
 
+RETRY="${RETRY:-false}"
+
 # 查找 dispatch 可執行檔
-if [ -f "$GSD_ADDON_HOME/scripts/gsd-dispatch.sh" ]; then
-    exec "$GSD_ADDON_HOME/scripts/gsd-dispatch.sh" "$@"
-else
+if [ ! -f "$GSD_ADDON_HOME/scripts/gsd-dispatch.sh" ]; then
     echo "❌ gsd-dispatch.sh not found at $GSD_ADDON_HOME/scripts/" >&2
     echo "   Please check your gsd-addon installation." >&2
     exit 1
+fi
+
+if [[ "$RETRY" == "true" ]]; then
+    if [ -f "$GSD_ADDON_HOME/scripts/dispatch-with-retry.sh" ]; then
+        exec "$GSD_ADDON_HOME/scripts/dispatch-with-retry.sh" "$@"
+    else
+        echo "❌ dispatch-with-retry.sh not found at $GSD_ADDON_HOME/scripts/ (RETRY=true)" >&2
+        exit 1
+    fi
+else
+    exec "$GSD_ADDON_HOME/scripts/gsd-dispatch.sh" "$@"
 fi
 EOF
 chmod +x "$BIN_DIR/gsd-dispatch"
@@ -125,9 +145,9 @@ cat > "$BIN_DIR/gsd-test" << 'EOF'
 
 export GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
 
-# 加載 addon 配置
+# 加載 addon 配置（用 load 避免觸發 gsd-config.sh 的 usage 輸出）
 if [ -f "$GSD_ADDON_HOME/gsd-config.sh" ]; then
-    source "$GSD_ADDON_HOME/gsd-config.sh"
+    source "$GSD_ADDON_HOME/gsd-config.sh" load
 fi
 
 # 運行 test orchestrator
@@ -189,6 +209,7 @@ echo "  gsd-addon-config show                # Show addon configuration"
 echo ""
 echo -e "${BLUE}Dispatch scripts:${NC}"
 echo "  $GSD_ADDON_HOME/scripts/gsd-dispatch.sh      # Phase dispatch (research/plan/execute)"
+echo "  $GSD_ADDON_HOME/scripts/dispatch-with-retry.sh # Retry wrapper (RETRY=true gsd-dispatch)"
 echo "  $GSD_ADDON_HOME/scripts/gsd-permission-audit.sh  # Cross-project permission check"
 echo ""
 echo -e "${YELLOW}ℹ️  Documentation:${NC}"
