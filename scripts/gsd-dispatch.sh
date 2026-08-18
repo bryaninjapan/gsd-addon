@@ -241,7 +241,7 @@ echo "  Liveness 檢查 — 確認士兵真的有產出"
 echo "════════════════════════════════════════════════════════"
 
 # ---- Liveness 檢查 1:log 檔大小 ----
-LOG_SIZE=$(stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)
+LOG_SIZE=$(wc -c < "$LOG_FILE" 2>/dev/null || echo 0)
 if [[ $LOG_SIZE -eq 0 ]]; then
   echo "✗ FAIL: log 檔 0 bytes — 士兵執行失敗或 process 被殺"
   echo "  檔案: $LOG_FILE"
