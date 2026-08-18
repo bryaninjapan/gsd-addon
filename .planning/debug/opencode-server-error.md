@@ -315,5 +315,15 @@ python3 -c 'import os; ...'  # ✓ 測試通過（見 Task 3.2 驗證）
 ### 修復記錄（Phase 3 執行）
 
 - 執行日期：2026-08-19
-- 工作：Task 3.3 — 回灌已安裝副本設計到 source repo，並補建 prompts/ 目錄
+- Task 3.3（回灌）：選擇 Option A，已完成
+  - `scripts/gsd-dispatch.sh`：source repo 已更新為 prompts-based 版本
+  - `prompts/`：5 個範本（execute/plan/research/check/revise）已加入 source repo
+  - `install.sh`：新增 prompts/ 複製區塊（缺失時 exit 1，強制要求）
+- Task 3.4（端對端驗證）：2026-08-19
+  - `bash -n` source repo：✓ 通過
+  - `bash -n` 已安裝副本：✓ 通過
+  - `diff` 兩份 gsd-dispatch.sh：✓ 完全一致
+  - `build_prompt()` 插值測試（PHASE/TARGET_DIR/TODAY/PHASE_SECTION）：✓ 全部正確替換，無殘餘 {{}}
+  - `extract_phase_section()` 測試（Phase 3 ROADMAP）：✓ 成功擷取
+  - 所有 5 個 prompt 範本 diff：✓ 兩份完全相同
 - 結果：見 Phase 3 SUMMARY（3-SUMMARY.md）
