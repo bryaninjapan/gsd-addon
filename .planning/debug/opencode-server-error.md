@@ -268,3 +268,52 @@ This bug was discovered after fixing [[gsd-dispatch-wrapper-bug-fix]] (commit 2b
 2. **Testing discovery**: Bug only surfaced during actual OpenCode dispatch - unit testing would not have caught this
 3. **Error messaging**: OpenCode's UnknownError is correct but cryptic; could benefit from "agent not found" clarification
 4. **Two-location maintenance**: gsd-addon maintains both source (~/Documents/gsd-addon) and installed (~/.claude/gsd-addon) copies - both must be updated
+
+---
+
+## 後續追蹤：Source / 安裝副本分岔（2026-08-19，Phase 3 調查）
+
+### 發現時間與情境
+
+Phase 2 timeout hardening 執行後，透過正式派工確認 Phase 2 commit 時發現派工回報 exit 1，
+但 gsd-executor 實際上已正確完成工作並 commit。追查後確認根本原因為
+**source repo 與已安裝副本的設計已分岔**。
+
+### 分岔內容
+
+| 面向 | Source Repo (`/Users/bryan/Documents/gsd-addon`) | 已安裝副本 (`~/.claude/gsd-addon`) |
+|------|--------------------------------------------------|-------------------------------------|
+| 派工方式 | `opencode run --command "$GSD_COMMAND"` | `opencode run "$FULL_PROMPT"`（prompt 範本） |
+| 支援 MODE | research / plan / execute | research / plan / execute / **check / revise** |
+| 跨專案處理 | `gsd-permission-audit.sh` 白名單審計 | `cd "$TARGET_DIR"` 後直接執行（不需白名單） |
+| build_prompt() | 無此函式 | Python env vars 替換（安全，已測試） |
+| prompts/ 目錄 | **不存在** | 存在（execute/plan/research/check/revise.md） |
+| preflight_external_perms | 有定義且呼叫 | 有定義但不呼叫（已改用 cd 方式） |
+
+### build_prompt() Bug 狀態（Task 3.2 驗證）
+
+**背景描述的 bug**：執行 Phase 2 時，安裝副本的舊版 `build_prompt()` 可能曾有插值錯誤，
+產生 `MPLATE 2 /path 2026-08-18 ): No such file or directory`。
+
+**當前狀態**：已安裝副本的 `build_prompt()` 目前使用 Python env vars 方式（無 sed/heredoc
+特殊字元問題），**bug 不再存在**。
+
+驗證結果：
+```bash
+bash -n ~/.claude/gsd-addon/scripts/gsd-dispatch.sh  # ✓ 通過
+python3 -c 'import os; ...'  # ✓ 測試通過（見 Task 3.2 驗證）
+```
+
+### 決策：選擇 Option A（回灌 source repo）
+
+理由：
+1. 安裝副本的 prompts-based 設計更先進：不依賴 `--command` flag（已知 opencode v1.17.5 crash workaround）
+2. check/revise mode 對工作流有實際價值
+3. Python env vars 替換比 sed 更安全（無特殊字元問題）
+4. cd TARGET_DIR 方式不需要 opencode.json 白名單維護
+
+### 修復記錄（Phase 3 執行）
+
+- 執行日期：2026-08-19
+- 工作：Task 3.3 — 回灌已安裝副本設計到 source repo，並補建 prompts/ 目錄
+- 結果：見 Phase 3 SUMMARY（3-SUMMARY.md）
