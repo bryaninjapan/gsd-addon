@@ -1,30 +1,34 @@
 ---
-phase: "05"
-plan: "05"
+phase: "06"
+plan: "06"
 status: "Complete"
 milestone: "1.2"
-milestone_status: "Complete + UAT Verified"
-last_activity: "2026-08-19"
+milestone_status: "Complete + Layer 5 Diagnosed"
+last_activity: "2026-08-20"
 ---
 
 # GSD Addon — State
 
 **Current Milestone**: 1.2 — Dispatch System Resilience & Retry Mechanism ✅ **COMPLETE**
-**Current Phase**: 05 — Integration & Testing ✅ **COMPLETE**
-**Current Plan**: Phases 02-05 complete (100% of Milestone 1.2)
-**Status**: Milestone 1.2 Complete & Verified
-**Last Activity**: 2026-08-19
+**Current Phase**: 06 — Dispatch Debug Tool & Layer 5 Diagnosis ✅ **COMPLETE**
+**Current Plan**: Phases 02-06 complete (100% of Milestone 1.2 + Phase 6 add-on)
+**Status**: Phase 6 Complete — Debug Tool Delivered + Layer 5 Limitations Documented
+**Last Activity**: 2026-08-20
 
 ## Current Position
 
-Milestone 1.2 complete: Dispatch System Resilience & Retry Mechanism (✅ all phases delivered)
+Milestone 1.2 complete + Phase 6 (Debug Tool & Layer 5 Diagnosis):
 - Phase 02 complete: Core Timeout Hardening
 - Phase 03 complete: Source/Install Drift Fix
 - Phase 04 complete: Retry Wrapper Implementation
 - Phase 05 complete: Integration & Testing
-- ✅ UAT Verification: 27/27 items passed
+- Phase 06 complete: Debug Tool (Layer 1-4) + Layer 5 Diagnosis
+- ✅ UAT Verification: 27/27 items passed (Milestone 1.2)
 
-Next milestone: Phase 06 — GSD-Dispatch Debug Tool (planned for next session)
+Phase 06 deliverables:
+- Layer 1-4 ✅: gsd-dispatch-chain.sh (research→plan→check orchestrator)
+- Layer 1-4 ✅: gsd-dispatch-debug.sh (6 diagnostic modes)
+- Layer 5 ⚠️: Diagnosis complete — OpenCode performance limits confirmed, no fix at script layer
 
 ## Decisions
 
@@ -43,7 +47,8 @@ Next milestone: Phase 06 — GSD-Dispatch Debug Tool (planned for next session)
 | 03 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 3 commits |
 | 04 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 4 commits |
 | 05 | ✅ Complete (2026-08-19) | ✅ 8/8 passed | 5 commits |
-| **Milestone 1.2** | ✅ **Complete** | ✅ **27/27 passed** | **15 commits** |
+| 06 | ✅ Complete (2026-08-20) | ✅ Layer 1-4 delivered | 3 commits |
+| **Milestone 1.2** | ✅ **Complete** | ✅ **27/27 passed** | **18 commits** |
 
 ## Session Log
 
@@ -61,4 +66,14 @@ Next milestone: Phase 06 — GSD-Dispatch Debug Tool (planned for next session)
 - 2026-08-19: Phase 05 UAT passed (8/8 tests green)
 - 2026-08-19: **Milestone 1.2 UAT Complete** — 27/27 verification items passed
 - 2026-08-19: Milestone summary generated (`.planning/reports/MILESTONE_SUMMARY-v1.2.md`)
-- Next: Phase 06 — GSD-Dispatch Debug Tool (6 debug modes: status/install/retry/logs/check-env/diagnose)
+- 2026-08-20: **Phase 06 Start** — GSD-Dispatch Debug Tool + Layer 5 Deep Diagnosis
+  - Layer 1-4 Implementation: research→plan→check orchestration
+  - Commit a2c66d0: gsd-dispatch-chain.sh (230+ lines, TARGET_DIR support, fail-fast)
+  - Commit 91e875f: gsd-dispatch-debug.sh (360+ lines, 6 diagnostic modes)
+  - Layer 5 Diagnosis: 4-step scientific analysis (70 minutes)
+    * Step 1: ✅ Reproduced hang (Check mode needs 120+ sec)
+    * Step 2: ✅ Content analysis (180KB, within limits)
+    * Step 3: ✅ Script audit (no bugs, correct logic)
+    * Step 4: ✅ Process monitoring (OpenCode slow code reading)
+  - Commit b5cf503: Layer 5 diagnosis complete — OpenCode performance limits confirmed
+- 2026-08-20: **Phase 06 Complete** — All deliverables pushed, Layer 5 limitations documented
