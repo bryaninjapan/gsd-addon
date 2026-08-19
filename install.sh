@@ -168,6 +168,24 @@ EOF
 chmod +x "$BIN_DIR/gsd-addon-config"
 echo -e "${GREEN}✓ gsd-addon-config command installed${NC}"
 
+# gsd-dispatch-debug 命令（派工診斷工具）
+cat > "$BIN_DIR/gsd-dispatch-debug" << 'EOF'
+#!/bin/bash
+# Global GSD Dispatch Debug command
+
+export GSD_ADDON_HOME="${GSD_ADDON_HOME:-$HOME/.claude/gsd-addon}"
+
+if [ ! -f "$GSD_ADDON_HOME/scripts/gsd-dispatch-debug.sh" ]; then
+    echo "❌ gsd-dispatch-debug.sh not found at $GSD_ADDON_HOME/scripts/" >&2
+    echo "   Please check your gsd-addon installation." >&2
+    exit 1
+fi
+
+exec "$GSD_ADDON_HOME/scripts/gsd-dispatch-debug.sh" "$@"
+EOF
+chmod +x "$BIN_DIR/gsd-dispatch-debug"
+echo -e "${GREEN}✓ gsd-dispatch-debug command installed${NC}"
+
 # ==================== 更新 PATH ====================
 
 echo -e "${BLUE}📝 Updating PATH...${NC}"
@@ -222,11 +240,13 @@ echo -e "${BLUE}Available commands:${NC}"
 echo "  gsd-test --workflow <name>           # Run test workflow"
 echo "  gsd-test --workflow <name> --env <env>  # Specify environment"
 echo "  gsd-addon-config show                # Show addon configuration"
+echo "  gsd-dispatch-debug [mode]            # Debug dispatch system"
 echo ""
 echo -e "${BLUE}Dispatch scripts:${NC}"
 echo "  $GSD_ADDON_HOME/scripts/gsd-dispatch.sh      # Phase dispatch (research/plan/execute)"
 echo "  $GSD_ADDON_HOME/scripts/dispatch-with-retry.sh # Retry wrapper (RETRY=true gsd-dispatch)"
-echo "  $GSD_ADDON_HOME/scripts/gsd-permission-audit.sh  # Cross-project permission check"
+echo "  $GSD_ADDON_HOME/scripts/gsd-dispatch-chain.sh # Chain orchestrator (research→plan→check)"
+echo "  $GSD_ADDON_HOME/scripts/gsd-dispatch-debug.sh  # Dispatch diagnostics"
 echo ""
 echo -e "${YELLOW}ℹ️  Documentation:${NC}"
 echo "  - Dispatch guide: $GSD_ADDON_HOME/dispatch/DISPATCH-COMPLETE-GUIDE.md"
