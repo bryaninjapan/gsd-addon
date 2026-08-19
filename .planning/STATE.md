@@ -15,7 +15,8 @@ last_activity: "2026-08-19"
 ## Current Position
 
 Phase 04 complete: Retry Wrapper Implementation
-Next: Phase 05 — Integration & Testing
+Phase 05 in progress: Integration & Testing (5.1-5.7 auto)
+Next: Phase 06 — GSD-Dispatch Debug Tool
 
 ## Decisions
 
@@ -39,6 +40,6 @@ Next: Phase 05 — Integration & Testing
 - 2026-08-19: Phase 03 complete (source/install drift fixed, prompts backported)
 - 2026-08-19: Phase 04 complete (retry wrapper + RETRY routing + install.sh/gsd-config.sh fixes)
 - 2026-08-19: Phase 04 UAT passed (5/5 tests: install, routing x2, syntax, exit code)
-- 2026-08-19: Phase 05 queued — waiting for soapwavehealing Phase 2 (planner revision) to complete
-  - Phase 05 will be integration testing in soapwavehealing (baseline + RETRY=true + checkpoint validation)
+- 2026-08-19: Phase 05 in progress — auto dispatch (5.1-5.7: deploy + tests + docs)
   - Wiki narrative: 2026-08-19-gsd-addon-milestone-1.2-resilience-journey.md
+- 2026-08-19: Phase 06 planned — gsd-dispatch-debug.sh tool (6 debug modes: status/install/retry/logs/check-env/diagnose)
