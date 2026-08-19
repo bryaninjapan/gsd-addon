@@ -192,6 +192,22 @@ if declare -f gsd_verify_setup > /dev/null; then
     gsd_verify_setup
 fi
 
+# ==================== 派工鏈驗證（可選） ====================
+
+if [[ "$1" == "--verify" ]]; then
+    echo ""
+    echo -e "${BLUE}🔗 Testing dispatch chain...${NC}"
+
+    # 測試派工鏈腳本
+    if [ ! -f "$GSD_ADDON_HOME/scripts/gsd-dispatch-chain.sh" ]; then
+        echo -e "${YELLOW}⚠ Dispatch chain script not found (optional feature)${NC}"
+    else
+        echo -e "${GREEN}✓ gsd-dispatch-chain.sh available${NC}"
+        echo "  Usage: gsd-dispatch-chain.sh <PHASE>"
+        echo "  or: TARGET_DIR=/path/to/project gsd-dispatch-chain.sh <PHASE>"
+    fi
+fi
+
 # ==================== 完成 ====================
 
 echo ""

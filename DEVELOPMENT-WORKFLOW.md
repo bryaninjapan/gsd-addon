@@ -490,3 +490,113 @@ ls -lh ~/.claude/gsd-addon/.planning/soldier-logs/phase-<N>-*.log
 ---
 
 **派工失敗時：先查 log → 判斷失敗類型 → 決定是否重試**
+
+---
+
+## 派工鏈（自動順序執行）
+
+### 用途
+
+自動執行 `research → plan → check` 的完整流程，無需手動逐個派工。
+
+### 使用方式
+
+```bash
+# 本地派工（當前專案）
+gsd-dispatch-chain.sh <PHASE>
+
+# 跨專案派工
+TARGET_DIR=/path/to/project gsd-dispatch-chain.sh <PHASE>
+```
+
+### 例子
+
+#### 本地派工
+```bash
+cd /Users/bryan/Documents/soapwavehealing
+
+# 自動順序執行：research → plan → check
+gsd-dispatch-chain.sh 3
+
+# 若需要重試（啟用 RETRY 邏輯）
+RETRY=true gsd-dispatch-chain.sh 3
+```
+
+#### 跨專案派工
+```bash
+# 在任何目錄執行，但指定目標專案
+TARGET_DIR=/Users/bryan/Documents/soapwavehealing \
+  gsd-dispatch-chain.sh 3
+```
+
+### 工作流程
+
+```
+派工鏈啟動
+  ↓
+[1] MODE=research → 產出 *-RESEARCH.md ✓
+  ↓
+[2] MODE=plan     → 產出 *-PLAN.md ✓
+  ↓
+[3] MODE=check    → 產出 *-PLAN-CHECK.md ✓
+  ↓
+派工鏈完成
+
+任何階段失敗 → 立即停止（fail-fast）
+```
+
+### 失敗排查
+
+若派工鏈失敗：
+
+```bash
+# 1. 檢查錯誤訊息
+#    - 若是「RESEARCH.md 未產出」→ research 派工失敗，查看 log
+#    - 若是「PLAN.md 未產出」 → plan 派工失敗，查看 log
+#    - 若是「PLAN-CHECK.md 未產出」 → check 派工失敗，查看 log
+
+# 2. 單獨執行失敗的 mode 進行診斷
+MODE=plan TARGET_DIR=/path gsd-dispatch.sh 3
+
+# 3. 檢查 log 並根據錯誤類型決定是否重試
+LATEST_LOG=$(ls -t ~/.claude/gsd-addon/.planning/soldier-logs/phase-*.log | head -1)
+tail -50 "$LATEST_LOG"
+
+# 4. 若為暫時性錯誤（timeout、server error），用 RETRY 重試
+RETRY=true gsd-dispatch-chain.sh 3
+```
+
+### 已知限制
+
+- **Check mode 卡頓**（Layer 5 問題）：
+  - 若派工鏈在 check 階段卡頓 > 120 秒，這是已知問題
+  - 解決方案：
+    1. 設置 timeout（使用 `timeout` 命令，macOS 需要 `gtimeout`）
+    2. 或手動分開執行 check，給予足夠時間（3600s）
+
+- **TARGET_DIR 驗證**：
+  - 必須確保 TARGET_DIR 包含 `.planning` 目錄
+  - 若路徑錯誤，派工鏈會立即停止並報告
+
+### 更新派工鏈
+
+派工鏈腳本位於：
+```
+~/.claude/gsd-addon/scripts/gsd-dispatch-chain.sh
+```
+
+若需要更新，重新執行安裝：
+```bash
+cd ~/Documents/gsd-addon
+bash install.sh
+```
+
+---
+
+**最佳實踐**：
+
+✅ 用派工鏈進行完整 research→plan→check 流程  
+✅ 若單個 mode 失敗，改用單個派工進行診斷  
+✅ 保存派工鏈的完整輸出以便查証  
+❌ 不要在派工鏈層面設置重試邏輯（用 `RETRY=true` 環境變數代替）  
+❌ 不要修改派工鏈腳本本身（改用 source repo）
