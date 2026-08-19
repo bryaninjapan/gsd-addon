@@ -1,54 +1,68 @@
 ---
-phase: "06"
-plan: "06"
-status: "Complete"
-milestone: "1.2"
-milestone_status: "Complete + Layer 5 Diagnosed"
+phase: "07"
+plan: "07"
+status: "In Progress"
+milestone: "1.2+"
+milestone_status: "Complete + Phase 7 Queued"
 last_activity: "2026-08-20"
 ---
 
 # GSD Addon — State
 
-**Current Milestone**: 1.2 — Dispatch System Resilience & Retry Mechanism ✅ **COMPLETE**
-**Current Phase**: 06 — Dispatch Debug Tool & Layer 5 Diagnosis ✅ **COMPLETE**
-**Current Plan**: Phases 02-06 complete (100% of Milestone 1.2 + Phase 6 add-on)
-**Status**: Phase 6 Complete — Debug Tool Delivered + Layer 5 Limitations Documented
+**Current Milestone**: 1.2 ✅ Complete — Dispatch System Resilience & Retry Mechanism  
+**Current Phase**: 07 — Cross-Runtime Dispatch Robustness 🔄 **IN PROGRESS**
+**Current Plan**: Phases 02-07 (Milestone 1.2 + Phase 6-7 enhancements)
+**Status**: Phase 7 Started — Research Complete, Planning Next
 **Last Activity**: 2026-08-20
 
 ## Current Position
 
-Milestone 1.2 complete + Phase 6 (Debug Tool & Layer 5 Diagnosis):
-- Phase 02 complete: Core Timeout Hardening
-- Phase 03 complete: Source/Install Drift Fix
-- Phase 04 complete: Retry Wrapper Implementation
-- Phase 05 complete: Integration & Testing
-- Phase 06 complete: Debug Tool (Layer 1-4) + Layer 5 Diagnosis
-- ✅ UAT Verification: 27/27 items passed (Milestone 1.2)
+Milestone 1.2 complete + Phase 6-7 (Advanced Dispatch):
+- Phase 02 ✅: Core Timeout Hardening
+- Phase 03 ✅: Source/Install Drift Fix
+- Phase 04 ✅: Retry Wrapper Implementation
+- Phase 05 ✅: Integration & Testing
+- Phase 06 ✅: Debug Tool (Layer 1-4) + Layer 5 Diagnosis
+- Phase 07 🔄: Cross-Runtime Dispatch Robustness (research done, planning phase next)
 
-Phase 06 deliverables:
-- Layer 1-4 ✅: gsd-dispatch-chain.sh (research→plan→check orchestrator)
-- Layer 1-4 ✅: gsd-dispatch-debug.sh (6 diagnostic modes)
-- Layer 5 ⚠️: Diagnosis complete — OpenCode performance limits confirmed, no fix at script layer
+Phase 07 deliverables (in progress):
+- Research ✅: GSD Core analysis, soapwavehealing incident analysis
+- Context ✅: 8 design decisions documented
+- ROADMAP ✅: Phase 7 objectives updated
+- STATE ✅: This document, transition to Phase 7
+- Implementation 🔄: gsd-dispatch.sh + gsd-dispatch-chain.sh + gsd-dispatch-debug.sh enhancements
 
 ## Decisions
 
-- **Option A (backport)**: 選擇將已安裝副本的 prompts-based 設計回灌 source repo，而非用 source 版本覆蓋已安裝副本
-- **build_prompt() Python env vars**: 確認當前安裝副本的插值方式安全，bug 已不存在
-- **cd TARGET_DIR 方式**: 取代 opencode.json 跨目錄白名單，跨專案派工更簡潔
-- **prompts/ 安裝強制**: install.sh 中缺少 prompts/ 時 exit 1（非警告）
-- **RETRY=true 切換重試 wrapper**: 全域命令讀 RETRY env；true → dispatch-with-retry.sh，否則 gsd-dispatch.sh
-- **重試策略**: MAX_RETRIES=3 指數退避；非重試(參數/權限/中斷) vs 重試(124/err_/network)
+### Milestone 1.2 Decisions (Locked)
+- **Prompts backport**: Chose to backport prompts-based design to source repo
+- **build_prompt() safety**: Confirmed Python env var interpolation is safe
+- **cd TARGET_DIR pattern**: Replaced opencode.json cross-directory whitelist
+- **prompts/ enforcement**: install.sh exits 1 if prompts/ missing
+- **RETRY routing**: Global gsd-dispatch command reads RETRY env; routes to wrapper
+- **Retry strategy**: MAX_RETRIES=3 with exponential backoff
+
+### Phase 7 Decisions (Locked)
+1. **Project root detection**: Git repository root auto-detection (GSD Core pattern) ✅ CHOSEN
+2. **PHASE validation**: Strict format validation with examples ✅ CHOSEN
+3. **Cross-project validation**: Full pre-flight validation (ROADMAP.md existence, PHASE definition) ✅ CHOSEN
+4. **Log directory**: TARGET_DIR-based logging (not always gsd-addon) ✅ CHOSEN
+5. **Output validation**: Detailed with diagnostics (file count, size, next-steps) ✅ CHOSEN
+6. **Error messages**: Include examples + remediation ✅ CHOSEN
+7. **Diagnostic mode**: Cross-project mode for gsd-dispatch-debug ✅ CHOSEN
+8. **Backwards compatibility**: Full compatibility maintained (TARGET_DIR still honored) ✅ CHOSEN
 
 ## Progress
 
-| Phase | Status | UAT | Commits |
-|-------|--------|-----|---------|
-| 02 | ✅ Complete (2026-08-19) | ✅ 4/4 passed | 3 commits |
-| 03 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 3 commits |
-| 04 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 4 commits |
-| 05 | ✅ Complete (2026-08-19) | ✅ 8/8 passed | 5 commits |
-| 06 | ✅ Complete (2026-08-20) | ✅ Layer 1-4 delivered | 3 commits |
-| **Milestone 1.2** | ✅ **Complete** | ✅ **27/27 passed** | **18 commits** |
+| Phase | Status | UAT | Commits | Deliverables |
+|-------|--------|-----|---------|--------------|
+| 02 | ✅ Complete (2026-08-19) | ✅ 4/4 passed | 3 | Timeout hardening |
+| 03 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 3 | Source/install sync |
+| 04 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 4 | Retry wrapper |
+| 05 | ✅ Complete (2026-08-19) | ✅ 8/8 passed | 5 | Integration verified |
+| 06 | ✅ Complete (2026-08-20) | ✅ Layer 1-4 | 4 | Chain + Debug tool |
+| 07 | 🔄 In Progress | — | — | Dispatch robustness |
+| **Milestone 1.2** | ✅ **Complete** | ✅ **27/27 passed** | **22 commits** | Resilience + Retry |
 
 ## Session Log
 
@@ -77,3 +91,8 @@ Phase 06 deliverables:
     * Step 4: ✅ Process monitoring (OpenCode slow code reading)
   - Commit b5cf503: Layer 5 diagnosis complete — OpenCode performance limits confirmed
 - 2026-08-20: **Phase 06 Complete** — All deliverables pushed, Layer 5 limitations documented
+- 2026-08-20: **Phase 07 Initiated** — Cross-Runtime Dispatch Robustness
+  - Research complete: GSD Core analysis, gsd-addon innovation validation
+  - Context complete: 8 design decisions locked
+  - ROADMAP updated: Phase 7 objectives, Phase 8-9 rescheduled
+  - Next: Planning phase (task breakdown, estimation)

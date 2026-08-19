@@ -177,48 +177,95 @@
 
 ---
 
-## Phase 7: OpenCode/Codex 支持擴展
+## Phase 7: Cross-Runtime Dispatch Robustness
 
-**目標**: 為 OpenCode 和 Codex 添加 ScheduleWakeup 支持
+**目標**: 解決跨項目派工容錯問題，採用 GSD Core 最佳實踐（自動檢測項目根目錄、前置驗證、錯誤指導）
 
-**時間**: 2026-09-15 ~ 2026-10-15（1 個月）
+**時間**: 2026-09-01 ~ 2026-09-30（4 週）
+
+**背景**: gsd-addon 是業界第一個實現跨運行時派工的系統（Claude Code → OpenCode）。soapwavehealing Phase 3 Wave 2-5 派工失敗案例顯示跨項目派工有嚴重缺陷。Phase 7 改進派工系統的容錯性，使 soapwavehealing 無需手動設置 TARGET_DIR 即可成功。
 
 ### 任務清單
 
-#### 7.1 OpenCode ScheduleWakeup 實現
+#### 7.1 項目根目錄自動檢測
 
-- [ ] 研究 OpenCode 的排程 API（待發佈）
-- [ ] 實現 `scripts/schedule-wakeup/opencode.sh`
-- [ ] 編寫文檔與範例
-- [ ] 在生產項目驗證
+- [ ] 采用 GSD Core 的 git 根目錄檢測模式
+- [ ] 修改 gsd-dispatch.sh 第 92-94 行
+- [ ] 優先級：RUNTIME_DIR > git 根目錄 > pwd
+- [ ] 後向相容性：TARGET_DIR 仍然優先
 
-#### 7.2 Codex 支持
+#### 7.2 前置驗證與錯誤指導
 
-- [ ] 設計 Codex 派工 API
-- [ ] 實現 `scripts/dispatch/codex.py`
-- [ ] 實現 Codex ScheduleWakeup
-- [ ] 集成測試
+- [ ] PHASE 格式驗證（正則表達式）
+- [ ] TARGET_DIR 結構驗證（.planning/ROADMAP.md 存在）
+- [ ] PHASE 定義驗證（PHASE 在 ROADMAP 中）
+- [ ] 改進錯誤消息（包括示例和修復建議）
 
-#### 7.3 通用排程層
+#### 7.3 日誌與輸出改進
 
-- [ ] 抽象派工層（使不同運行時可互換）
-- [ ] 統一 ScheduleWakeup 接口
-- [ ] 性能對標（各運行時）
+- [ ] 日誌目錄統一到 TARGET_DIR（而非總是 gsd-addon）
+- [ ] 派工鏈輸出驗證增強（文件計數、大小、診斷提示）
+- [ ] 失敗時的下一步指導（引導用戶使用 gsd-dispatch-debug）
+
+#### 7.4 診斷工具擴展
+
+- [ ] gsd-dispatch-debug 添加 cross-project 模式
+- [ ] 跨項目檢查清單（TARGET_DIR、git 根、ROADMAP 對應）
+- [ ] 失敗恢復流程文檔
+
+#### 7.5 文檔與測試
+
+- [ ] DEVELOPMENT-WORKFLOW.md 更新
+- [ ] 跨項目派工指南（包括 GSD Core 模式對應）
+- [ ] 單元測試（PHASE 驗證、路徑檢測）
+- [ ] 集成測試（本地 + soapwavehealing）
+- [ ] E2E 測試（Phase 3 Wave 2-5 成功）
 
 ### Phase 7 成功標準
 
-- [ ] OpenCode ScheduleWakeup 實現完成
-- [ ] Codex 派工完整支持
-- [ ] 通用排程層抽象完成
-- [ ] v2.0 版本發佈
+- [ ] soapwavehealing 無需 TARGET_DIR 可成功派工
+- [ ] 所有派工日誌在目標項目目錄中
+- [ ] PHASE 格式錯誤被清楚拒絕（有示例）
+- [ ] gsd-dispatch-debug cross-project 模式工作
+- [ ] 後向相容：現有 TARGET_DIR 工作流不破壞
+- [ ] 單元 + 集成 + E2E 測試覆蓋
+- [ ] v1.3 版本發佈（跨項目派工穩定）
 
 ---
 
-## Phase 8: Hermes 工作流集成
+## Phase 8: OpenCode/Codex Runtime Expansion
+
+**目標**: 為 OpenCode 和 Codex 添加 ScheduleWakeup 支持（原 Phase 7 規劃）
+
+**時間**: 2026-09-30 ~ 2026-10-31（1 個月）
+
+### 任務清單
+
+#### 8.1 OpenCode ScheduleWakeup 實現
+
+- [ ] 研究 OpenCode 的排程 API
+- [ ] 實現 `scripts/schedule-wakeup/opencode.sh`
+- [ ] 編寫文檔與範例
+
+#### 8.2 Codex 派工支持
+
+- [ ] 設計 Codex 派工 API
+- [ ] 實現 `scripts/dispatch/codex.sh`
+- [ ] 集成測試
+
+### Phase 8 成功標準
+
+- [ ] OpenCode ScheduleWakeup 工作
+- [ ] Codex 派工完整支持
+- [ ] v1.4 版本發佈
+
+---
+
+## Phase 9: Hermes 工作流集成
 
 **目標**: 集成 Hermes 分佈式工作流引擎
 
-**時間**: 2026-10-15 ~ 2026-11-15（1 個月）
+**時間**: 2026-10-31 ~ 2026-11-30（1 個月）
 
 ### 任務清單
 
@@ -254,10 +301,11 @@
 | 里程碑 | Phase | 預定日期 | 完成日期 | 狀態 |
 |--------|-------|---------|---------|------|
 | Milestone 1.1 | 1 | 2026-08-22 | 2026-08-18 | ✅ 完成 |
-| Milestone 1.2 | 2, 3, 4, 5 | 2026-08-21 | — | 🔄 進行中（Phase 2+3 完成）|
-| 社區反饋 | 6 | 2026-09-15 | — | ⏳ 待執行 |
-| OpenCode/Codex | 7 | 2026-10-15 | — | ⏳ 待執行 |
-| Hermes 集成 | 8 | 2026-11-15 | — | ⏳ 待執行 |
+| Milestone 1.2 | 2, 3, 4, 5 | 2026-08-21 | 2026-08-19 | ✅ 完成 |
+| Debug Tool + L5 Diagnosis | 6 | 2026-08-20 | 2026-08-20 | ✅ 完成 |
+| Cross-Runtime Dispatch Robustness | 7 | 2026-09-30 | — | 🔄 進行中 |
+| OpenCode/Codex ScheduleWakeup | 8 | 2026-10-31 | — | ⏳ 待執行 |
+| Hermes 工作流集成 | 9 | 2026-11-30 | — | ⏳ 待執行 |
 
 ---
 
@@ -268,10 +316,16 @@ Phase 1 (推送驗證) ✅ (2026-08-18)
     ↓
 Milestone 1.1 (Bug 修復驗證) ✅ (2026-08-18)
     ↓
-Milestone 1.2 (韌性與重試) 🔄 (start 2026-08-19)
-  Phase 2 (超時修復,✅完成) → Phase 3 (source/安裝副本分岔修復) → Phase 4 (重試 wrapper) → Phase 5 (集成驗證)
+Milestone 1.2 (韌性與重試) ✅ (2026-08-19)
+  Phase 2 (超時修復) → Phase 3 (分岔修復) → Phase 4 (重試 wrapper) → Phase 5 (集成驗證)
     ↓
-Phase 6 (社區反饋) ⏳ (start 2026-09-01)
+Phase 6 (Debug Tool + L5 Diagnosis) ✅ (2026-08-20)
+    ↓
+Phase 7 (跨運行時派工容錯) 🔄 (start 2026-08-20)
+    ↓
+Phase 8 (OpenCode/Codex ScheduleWakeup) ⏳ (start 2026-09-30)
+    ↓
+Phase 9 (Hermes 集成) ⏳ (start 2026-10-31)
     ↓
 Phase 7 (OpenCode/Codex) ⏳ (start 2026-09-15)
     ↓
