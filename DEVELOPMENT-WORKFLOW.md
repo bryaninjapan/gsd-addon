@@ -340,3 +340,153 @@ gsd-test --workflow booking-e2e.workflow.yml
 ---
 
 **開發時在本地修改+測試，GitHub 同步時才需要重新安裝。**
+
+---
+
+## 派工排障與重試機制
+
+### 什麼時候派工失敗？
+
+派工（`gsd-dispatch`）可能在以下情況失敗：
+- **參數錯誤**: 無效的 phase 編號、TARGET_DIR 不存在
+- **權限問題**: 檔案無讀寫權限、OpenCode 認證過期
+- **網路問題**: OpenCode 伺服器暫時故障、curl 連線超時
+- **超時**: 派工耗時超過 3600s (opencode) 或 5s (curl 檢查)
+
+### 啟用重試機制
+
+派工內建智能重試機制，可在失敗時自動重試（最多 3 次）。
+
+**啟用方式**:
+```bash
+# 預設（無重試）
+gsd-dispatch <phase>
+
+# 啟用重試（自動重試最多 3 次）
+RETRY=true gsd-dispatch <phase>
+```
+
+### 重試策略
+
+| 失敗類型 | 自動重試？ | 理由 |
+|---------|----------|------|
+| 參數錯誤 (usage/arg) | ❌ | 快速失敗，允許修正 |
+| 權限錯誤 (permission denied) | ❌ | 環境配置問題，重試無效 |
+| 用户中斷 (Ctrl+C) | ❌ | 用户明確中止 |
+| 超時 (exit 124) | ✅ | 暫時故障，可能恢復 |
+| OpenCode 伺服器錯誤 (err_xxxxxxxx) | ✅ | 伺服器暫時故障 |
+| 網路失敗 (curl failed) | ✅ | 網路抖動 |
+
+**重試延遲**:
+```
+嘗試 1 → 失敗 → 延遲 1s
+嘗試 2 → 失敗 → 延遲 2s
+嘗試 3 → 失敗 → 放棄
+```
+
+### 超時設置
+
+派工包含三層超時保護，防止永久卡住：
+
+| 操作 | 超時時限 | 原因 |
+|------|--------|------|
+| `opencode run` | 3600s (1小時) | 派工通常 5-30 分鐘，給予緩衝 |
+| `curl` (檢查) | 5s | 網路檢查通常 <1s |
+| `git diff` | 無明確超時 | git repo 無響應時降級訊息 |
+
+超時不會誤觸發：正常派工遠小於 3600s，網路檢查遠小於 5s。
+
+### 常見錯誤與排查
+
+#### 錯誤 1: err_xxxxxxxx (OpenCode 伺服器錯誤)
+
+```
+ERROR: err_13bbe49a: Unexpected server error
+```
+
+**原因**: OpenCode 伺服器暫時故障（網路抖動、過載等）
+
+**排查**:
+```bash
+# 1. 查看 log
+tail -100 ~/.claude/gsd-addon/.planning/soldier-logs/phase-*.log
+
+# 2. 啟用重試
+RETRY=true gsd-dispatch <phase>
+
+# 3. 如果重試 3 次後仍失敗，稍等後重試
+```
+
+#### 錯誤 2: Permission denied
+
+```
+ERROR: permission denied: ~/.claude/gsd-addon/scripts/dispatch-with-retry.sh
+```
+
+**原因**: 檔案缺少執行權限
+
+**排查**:
+```bash
+# 檢查檔案權限
+ls -la ~/.claude/gsd-addon/scripts/dispatch-with-retry.sh
+
+# 修復（重新安裝）
+bash ~/Documents/gsd-addon/install.sh
+```
+
+#### 錯誤 3: Timeout (exit 124)
+
+```
+[retry] attempt 1/3 failed (exit 124). Retrying in 1s...
+```
+
+**原因**: 派工超過 3600s（罕見，通常表示伺服器完全無響應）
+
+**排查**:
+```bash
+# 1. 檢查 OpenCode 伺服器狀態
+# 2. 查看 log 最後部分看是否卡在某個操作
+tail -50 ~/.claude/gsd-addon/.planning/soldier-logs/phase-*.log | grep -A5 "超時\|timeout"
+
+# 3. 使用 RETRY=true 重試
+RETRY=true gsd-dispatch <phase>
+```
+
+### 如何排查 Log 檔案
+
+派工的完整執行記錄存放在 log 檔案中：
+
+```bash
+# 查看最新 log
+LATEST_LOG=$(ls -t ~/.claude/gsd-addon/.planning/soldier-logs/phase-*.log | head -1)
+tail -100 "$LATEST_LOG"
+
+# 搜尋特定錯誤
+grep -n "ERROR\|err_\|timeout\|permission" "$LATEST_LOG"
+
+# 查看特定 phase 的 log
+ls -lh ~/.claude/gsd-addon/.planning/soldier-logs/phase-<N>-*.log
+```
+
+**Log 檔案位置**:
+```
+~/.claude/gsd-addon/.planning/soldier-logs/phase-N-YYYYMMDD-HHMMSS.log
+```
+
+### 最佳實踐
+
+✅ **DO**:
+1. 派工失敗時先查看 log
+2. 如果是伺服器錯誤，用 `RETRY=true` 重試
+3. 超時時稍等後重試
+4. 定期更新 `bash install.sh` 保持最新版本
+
+❌ **DON'T**:
+1. 不要在參數錯誤時重試（快速失敗更好）
+2. 不要無限重試（3 次失敗後檢查根本原因）
+3. 不要直接編輯 `dispatch-with-retry.sh`（改用 source repo）
+4. 不要忽略 permission 錯誤（重新安裝是最快的修復）
+
+---
+
+**派工失敗時：先查 log → 判斷失敗類型 → 決定是否重試**
