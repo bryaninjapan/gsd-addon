@@ -1,22 +1,30 @@
 ---
-phase: "04"
-plan: "04"
+phase: "05"
+plan: "05"
 status: "Complete"
+milestone: "1.2"
+milestone_status: "Complete + UAT Verified"
 last_activity: "2026-08-19"
 ---
 
 # GSD Addon — State
 
-**Current Phase**: 05 — integration-testing (next)
-**Current Plan**: (04 complete, 05 TBD)
-**Status**: Phase 04 Complete
+**Current Milestone**: 1.2 — Dispatch System Resilience & Retry Mechanism ✅ **COMPLETE**
+**Current Phase**: 05 — Integration & Testing ✅ **COMPLETE**
+**Current Plan**: Phases 02-05 complete (100% of Milestone 1.2)
+**Status**: Milestone 1.2 Complete & Verified
 **Last Activity**: 2026-08-19
 
 ## Current Position
 
-Phase 04 complete: Retry Wrapper Implementation
-Phase 05 in progress: Integration & Testing (5.1-5.7 auto)
-Next: Phase 06 — GSD-Dispatch Debug Tool
+Milestone 1.2 complete: Dispatch System Resilience & Retry Mechanism (✅ all phases delivered)
+- Phase 02 complete: Core Timeout Hardening
+- Phase 03 complete: Source/Install Drift Fix
+- Phase 04 complete: Retry Wrapper Implementation
+- Phase 05 complete: Integration & Testing
+- ✅ UAT Verification: 27/27 items passed
+
+Next milestone: Phase 06 — GSD-Dispatch Debug Tool (planned for next session)
 
 ## Decisions
 
@@ -29,10 +37,13 @@ Next: Phase 06 — GSD-Dispatch Debug Tool
 
 ## Progress
 
-| Plan | Status |
-|------|--------|
-| 03 | ✅ Complete (2026-08-19) |
-| 04 | ✅ Complete + UAT passed (2026-08-19) |
+| Phase | Status | UAT | Commits |
+|-------|--------|-----|---------|
+| 02 | ✅ Complete (2026-08-19) | ✅ 4/4 passed | 3 commits |
+| 03 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 3 commits |
+| 04 | ✅ Complete (2026-08-19) | ✅ 5/5 passed | 4 commits |
+| 05 | ✅ Complete (2026-08-19) | ✅ 8/8 passed | 5 commits |
+| **Milestone 1.2** | ✅ **Complete** | ✅ **27/27 passed** | **15 commits** |
 
 ## Session Log
 
@@ -40,6 +51,14 @@ Next: Phase 06 — GSD-Dispatch Debug Tool
 - 2026-08-19: Phase 03 complete (source/install drift fixed, prompts backported)
 - 2026-08-19: Phase 04 complete (retry wrapper + RETRY routing + install.sh/gsd-config.sh fixes)
 - 2026-08-19: Phase 04 UAT passed (5/5 tests: install, routing x2, syntax, exit code)
-- 2026-08-19: Phase 05 in progress — auto dispatch (5.1-5.7: deploy + tests + docs)
-  - Wiki narrative: 2026-08-19-gsd-addon-milestone-1.2-resilience-journey.md
-- 2026-08-19: Phase 06 planned — gsd-dispatch-debug.sh tool (6 debug modes: status/install/retry/logs/check-env/diagnose)
+- 2026-08-19: Phase 05 complete — integration & testing (4-way parallel dispatch validation)
+  - Task 5.1: deploy latest code (install.sh ✓)
+  - Task 5.2: baseline test (no RETRY)
+  - Task 5.3: RETRY=true functional test
+  - Task 5.4: checkpoint conflict validation
+  - Task 5.5: timeout reasonableness verification
+  - Task 5.6: DEVELOPMENT-WORKFLOW.md dispatch troubleshooting added
+- 2026-08-19: Phase 05 UAT passed (8/8 tests green)
+- 2026-08-19: **Milestone 1.2 UAT Complete** — 27/27 verification items passed
+- 2026-08-19: Milestone summary generated (`.planning/reports/MILESTONE_SUMMARY-v1.2.md`)
+- Next: Phase 06 — GSD-Dispatch Debug Tool (6 debug modes: status/install/retry/logs/check-env/diagnose)

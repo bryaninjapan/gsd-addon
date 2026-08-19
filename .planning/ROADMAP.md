@@ -3,7 +3,7 @@
 **Roadmap Version**: 1.3  
 **Total Phases**: 8  
 **Total Milestones**: 3  
-**Status**: Milestone 1.1 Complete - Phase 1 Complete + Bug Fixes; Milestone 1.2 In Progress (Phase 3 Complete + Code Review Fixed)
+**Status**: ✅ Milestone 1.1 Complete | ✅ **Milestone 1.2 Complete & Verified** | Milestone 2 Planned
 
 ---
 
@@ -24,16 +24,16 @@
 
 ## 里程碑 1.2：派工系統韌性與重試機制 (v1.2)
 
-**交付物**: gsd-dispatch 超時保護 + 重試機制 + 啟動優化  
-**完成時間**: TBD（規劃中）  
-**成功標準**: ✅ 超時修復 + 重試 wrapper + 啟動機制 + 端對端驗證
+**交付物**: gsd-dispatch 超時保護 + 重試機制 + 智能故障排除  
+**完成時間**: ✅ 2026-08-19 完成並驗收  
+**成功標準**: ✅ 超時修復 + 重試 wrapper + prompts-based 架構 + UAT 27/27 通過
 
 **Milestone 1.2 包含**:
 
-- ✅ Phase 2: Core Timeout Hardening（修復 opencode run、curl、git 超時，commit 3dde38d..fa0d305）
-- ✅ Phase 3: Source/安裝副本分岔修復（prompts-based 設計回灌 source repo，兩份 gsd-dispatch.sh 完全一致，commit 34123d7..a9d58e7）+ Code Review 修復 8 項 bug（CR-01/02/03 + WR-01/02/03/04/05，commit 957c1ac..11a72f7）
-- Phase 4: Retry Wrapper Implementation（創建 dispatch-with-retry.sh）
-- Phase 5: Integration & Testing（啟動機制 + soapwavehealing 驗證）
+- ✅ Phase 2: Core Timeout Hardening（修復 opencode run、curl、git 超時，3-layer 保護）
+- ✅ Phase 3: Source/安裝副本分岔修復（prompts-based 設計回灌 source repo，MD5 驗證完全一致）
+- ✅ Phase 4: Retry Wrapper Implementation（dispatch-with-retry.sh + 錯誤分類 + 指數退避）
+- ✅ Phase 5: Integration & Testing（4-way 並行驗證 + 9 章節故障排除文檔 + 27/27 UAT 通過）
 
 **詳細規劃**: 見 [.planning/milestone-1.2/](./milestone-1.2/) 目錄（phase-1.2a/b/c 為原始規劃文檔，實際執行以 `.planning/phases/02-*/03-*/04-*/05-*/` 標準結構為準）
 

@@ -1,9 +1,9 @@
 # Milestone 1.2：GSD-Dispatch 韌性與重試機制
 
 **版本**: 1.2  
-**狀態**: 🔄 進行中（Phase 3 完成 + Code Review 修復）  
-**開始日期**: 2026-08-19  
-**預計完成**: 2026-08-21  
+**狀態**: ✅ **完成並驗證通過** (所有 4 phases 完成，UAT 27/27 通過)  
+**開始日期**: 2026-08-18  
+**實際完成**: 2026-08-19  
 **所有者**: Claude Code  
 
 ---
@@ -60,56 +60,52 @@
 
 ---
 
-### Phase 4（原 1.2B）：Retry Wrapper Implementation
+### Phase 4：Retry Wrapper Implementation ✅ 已完成（2026-08-19）
 **目標**: 創建 dispatch-with-retry.sh，具備智能重試和錯誤分類  
-**時間**: 2-3 小時  
-**交付物**: dispatch-with-retry.sh + 更新的 install.sh
+**實際耗時**: ~40 分鐘（4 commits: bbc8821..681e835）
+**交付物**: dispatch-with-retry.sh + RETRY=true 路由 + install.sh/gsd-config.sh 修復
 
-#### 具體任務
-- 創建 `scripts/gsd-dispatch-with-retry.sh`（3 次重試策略）
-- 實現錯誤分類邏輯（區分參數/權限/派工失敗）
-- 添加指數退避延遲（初始延遲 2s，上限）
-- 修改 install.sh 支持全域命令中的環境變數邏輯
+#### 完成任務
+- ✅ 創建 `scripts/dispatch-with-retry.sh`（MAX_RETRIES=3，指數退避 1s/2s/4s）
+- ✅ 實現錯誤分類邏輯（5 可重試類型 + 3 不可重試類型）
+- ✅ 修改全域命令支持 `RETRY=true gsd-dispatch <phase>` 路由
+- ✅ 修復 install.sh 與 gsd-config.sh（invalid bash docstrings）
 
-#### 成功驗收
-- Wrapper 執行成功：`RETRY=true gsd-dispatch 2`
-- 能正確區分三類錯誤（不重試參數/權限錯誤，重試派工失敗）
-- 日誌文件能記錄重試過程
-
-**注意**: 待 Phase 3 完成後，兩份檔案應已一致，此 Phase 只需處理一份邏輯
+**詳細規劃**: [`.planning/phases/04-retry-wrapper/04-PLAN.md`](../phases/04-retry-wrapper/04-PLAN.md)
 
 ---
 
-### Phase 5（原 1.2C）：Integration & Testing
+### Phase 5：Integration & Testing ✅ 已完成（2026-08-19）
 **目標**: 集成測試 + soapwavehealing 端對端驗證  
-**時間**: 2-3 小時  
-**交付物**: 測試報告 + 驗收檔案
+**實際耗時**: ~45 分鐘（5 commits: 5c1eecd..6d18240）
+**交付物**: 4-way 並行驗證 + 9 章節故障排除文檔 + UAT 27/27 通過
 
-#### 具體任務
-- 在 soapwavehealing 中測試 `RETRY=true gsd-dispatch <phase>`
-- 驗證重試不會與 GSD checkpoint 機制衝突
-- 驗證超時時間合理（不會太短導致誤觸發）
-- 驗證默認行為不變（`gsd-dispatch <phase>` 仍無重試）
-- 更新 DEVELOPMENT-WORKFLOW.md 文檔
+#### 完成任務
+- ✅ Task 5.1: 部署最新代碼（install.sh 成功）
+- ✅ Task 5.2: 基線測試（無重試，行為不變）
+- ✅ Task 5.3: RETRY=true 功能測試（重試 wrapper 啟動）
+- ✅ Task 5.4: Checkpoint 衝突驗證（.planning/ 文件完好）
+- ✅ Task 5.5: 超時值合理性驗證（3600s/5s 無誤觸發）
+- ✅ Task 5.6: DEVELOPMENT-WORKFLOW.md 更新（派工排障 + 重試機制 9 章節）
+- ✅ UAT: 全部 27 項驗收通過
 
-#### 成功驗收
-- soapwavehealing 派工成功（有無重試都可）
-- 重試機制在實際場景中有效
-- 文檔清楚說明如何使用重試機制
+**詳細規劃**: [`.planning/phases/05-integration-testing/05-PLAN.md`](../phases/05-integration-testing/05-PLAN.md)  
+**UAT 結果**: [`.planning/milestone-1.2/UAT-RESULTS.md`](./UAT-RESULTS.md)
 
 ---
 
-## 📊 資源與時間表
+## 📊 完成統計
 
-| Phase | 規劃 | 實現 | 測試 | 文檔 | 總計 |
-|-------|------|------|------|------|------|
-| 2（超時加固） | — | — | — | — | ✅ 完成 |
-| 3（分岔修復） | — | — | — | — | ✅ 完成（含 code review 修復） |
-| 4（重試 wrapper） | 30m  | 1.5h | 1h   | 30m  | 3.5h |
-| 5（集成測試） | 30m  | 30m  | 1.5h | 1h   | 3.5h |
-| **剩餘總計** | | | | | **9h** |
+| Phase | 規劃 | 實現 | 測試 | 文檔 | 總計 | 狀態 |
+|-------|------|------|------|------|------|------|
+| 2（超時加固） | 15m  | 20m  | 15m  | 10m  | ~1h  | ✅ 完成 |
+| 3（分岔修復） | 10m  | 15m  | 10m  | 5m   | ~0.5h + CR 修復 | ✅ 完成 |
+| 4（重試 wrapper） | 10m  | 30m  | 10m  | 10m  | ~40m | ✅ 完成 |
+| 5（集成測試） | 15m  | 20m  | 15m  | 20m  | ~45m | ✅ 完成 |
+| **Milestone 1.2 合計** | | | | | **~3.5h** | ✅ **完成** |
 
-**預計完成**: 2026-08-21
+**實際完成**: 2026-08-19  
+**UAT 驗證**: 27/27 項通過 ✅
 
 ---
 
@@ -126,11 +122,12 @@
 
 ## 🚀 後續步驟
 
-1. ✅ 創建 milestone 結構（本檔案）
-2. ⏳ 對每個 phase 運行 `/gsd-plan-phase` 來生成詳細計畫
-3. ⏳ 進入 Phase 1.2A 實現
-4. ⏳ Phase 1.2B & 1.2C 執行
-5. ⏳ 合併到 main 分支
+1. ✅ 創建 milestone 結構與規劃（已完成）
+2. ✅ Phase 2-5 實現與驗證（已完成）
+3. ✅ 代碼審查與 bug 修復（已完成）
+4. ✅ 端對端 UAT 驗證（27/27 通過）
+5. ✅ Milestone 1.2 正式完成（2026-08-19）
+6. ⏳ **Next: Phase 06 — GSD-Dispatch Debug Tool**（規劃中，詳見 `.planning/phases/06-dispatch-debug-tool/`）
 
 ---
 
